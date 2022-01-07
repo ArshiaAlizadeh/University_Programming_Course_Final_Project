@@ -12,6 +12,10 @@ void income(void);
 void expense(void);
 void statisticsMenu(void);
 void accountBalance(void);
+void incomesStatisticsMenu(void);
+void totalIncomesYear(void);
+void expenseStatisticsMenu(void);
+void totalExpensesYear(void);
 
 char Name[30], LastName[40];
 
@@ -359,6 +363,13 @@ void login(void)
         {
             strcpy(Name, temp->name);
             strcpy(LastName, temp->last_name);
+            temp = end = start;
+            while(temp != NULL)
+            {
+                end = temp->link;
+                free(temp);
+                temp = end;
+            }
             mainMenu();
         }
         else
@@ -394,11 +405,24 @@ void login(void)
             }
             strcpy(Name, temp->name);
             strcpy(LastName, temp->last_name);
+            temp = end = start;
+            while(temp != NULL)
+            {
+                end = temp->link;
+                free(temp);
+                temp = end;
+            }
             mainMenu();
         }
     }
     else
     {
+        while(temp != NULL)
+        {
+            end = temp->link;
+            free(temp);
+            temp = end;
+        }
         setTextColor(RED);
         printf("\nERROR: User name not found!\n\n");
         setTextColor(WHITE);
@@ -718,11 +742,11 @@ void statisticsMenu(void)
     }
     else if(choice == '2')
     {
-        printf("Go to the Incomes Statistics!");
+        incomesStatisticsMenu();
     }
         else if(choice == '3')
         {
-            printf("Go to the Expenses Statistics!");
+            expenseStatisticsMenu();
         }
             else if(choice == '0')
             {
@@ -806,6 +830,9 @@ void accountBalance(void)
         tempExpense = tempExpense->link;
     }
     accountBalance = sumIncomes - sumExpenses;
+    setTextColor(AQUA);
+    printf(">> ");
+    setTextColor(WHITE);
     printf("Account Balance: ");
     if(accountBalance > 0)
     {
@@ -829,12 +856,26 @@ void accountBalance(void)
         printf("%d Rials\n\n", accountBalance);
     }
     printf("-----------------------------------------------\n\n");
+    tempIncome = endIncome = startIncome;
+    while(tempIncome != NULL)
+    {
+        endIncome = tempIncome->link;
+        free(tempIncome);
+        tempIncome = endIncome;
+    }
+    tempExpense = endExpense = startExpense;
+    while(tempExpense != NULL)
+    {
+        endExpense = tempExpense->link;
+        free(tempExpense);
+        tempExpense = endExpense;
+    }
     char choice;
-    printf("1. Statistics Menu\n2. EXIT\n\n0. Main Menu\n\n");
+    printf("1. Statistics Menu\n2. EXIT\n\n");
     printf(">>Please Enter Your Choice: ");
     choice = getchar();
     fflush(stdin);
-    while(choice != '1' && choice != '2' && choice != '0')
+    while(choice != '1' && choice != '2')
     {
         setTextColor(RED);
         printf("\nERROR: The number entered is invalid! Try again!\n\n");
@@ -847,12 +888,408 @@ void accountBalance(void)
     {
         statisticsMenu();
     }
-    else if(choice == '0')
+    else
     {
-        mainMenu();
+        exit(0);
     }
+}
+
+//This function displays the incomes statistics menu and goes to the next step based on the user's choice
+void incomesStatisticsMenu(void)
+{
+    char choice;
+    system("cls");
+    printf("--------------- Incomes Statistics Menu ---------------\n\n");
+    printf("1. The total incomes of a certain year\n2. The total incomes in a history interval\n3. The total of a certain type of income in a history interval\n");
+    printf("4. The ratio of different incomes to each other\n5. The details of incomes in a history interval\n6. The most income in a history interval\n");
+    printf("7. Search in the incomes description field\n\n0. Statistics Menu\n\n");
+    printf(">>Please Enter Your Choice: ");
+    choice = getchar();
+    fflush(stdin);
+    while(choice != '1' && choice != '2' && choice != '3' && choice != '4' && choice != '5' && choice != '6' && choice != '7' && choice != '0')
+    {
+        setTextColor(RED);
+        printf("\nERROR: The number entered is invalid! Try again!\n\n");
+        setTextColor(WHITE);
+        printf(">>Please Enter Your Choice: ");
+        choice = getchar();
+        fflush(stdin);
+    }
+    if(choice == '1')
+    {
+        totalIncomesYear();
+    }
+    else if(choice == '2')
+    {
+        printf("Go to the total incomes in a history interval");
+    }
+        else if(choice == '3')
+        {
+            printf("Go to the total of a certain type of income in a history interval");
+        }
+            else if(choice == '4')
+            {
+                printf("Go to the ratio of different incomes to each other");
+            }
+                else if(choice == '5')
+                {
+                    printf("Go to the details of incomes in a history interval");
+                }
+                    else if(choice == '6')
+                    {
+                        printf("Go to the most income in a history interval");
+                    }
+                        else if(choice == '7')
+                        {
+                            printf("Go to the search in the incomes description field");
+                        }
+                            else
+                            {
+                                statisticsMenu();
+                            }
+}
+
+//This function displays the total incomes of a certain year and goes to the next step based on the user's choice
+void totalIncomesYear(void)
+{
+    int len, exist=0, sumIncomes=0, amount;
+    char year[5], choice;
+    system("cls");
+    printf("--------------- Incomes Statistics ---------------\n\n");
+    printf("Please enter your desired year: ");
+    gets(year);
+    len = strlen(year);
+    while(len != 4)
+    {
+        system("cls");
+        printf("--------------- Incomes Statistics ---------------\n\n");
+        setTextColor(RED);
+        printf("ERROR: The number entered must contain 4 digits!\n\n");
+        setTextColor(WHITE);
+        printf("Please enter your desired year: ");
+        gets(year);
+        len = strlen(year);
+    }
+    char incomesFileName[80] = "Incomes_";
+    strcat(incomesFileName, Name);
+    strcat(incomesFileName, LastName);
+    strcat(incomesFileName, ".txt");
+    struct income *startIncome, *endIncome, *tempIncome;
+    FILE *f;
+    f = fopen(incomesFileName, "r");
+    if(f != NULL)
+    {
+        tempIncome = malloc(sizeof(struct income));
+        tempIncome->link = NULL;
+        fread(tempIncome, sizeof(struct income), 1, f);
+        startIncome = endIncome = tempIncome;
+        while(feof(f) == 0)
+        {
+            tempIncome = malloc(sizeof(struct income));
+            tempIncome->link = NULL;
+            fread(tempIncome, sizeof(struct income), 1, f);
+            endIncome->link = tempIncome;
+            endIncome = tempIncome;
+        }
+        fclose(f);
+    }
+    else
+    {
+        printf("File could not be opened!");
+        exit(0);
+    }
+    tempIncome = startIncome;
+    while(tempIncome != NULL)
+    {
+        if(strcmp(tempIncome->date.year, year) == 0)
+        {
+            exist = 1;
+            break;
+        }
+        tempIncome = tempIncome->link;
+    }
+    if(exist == 1)
+    {
+        tempIncome = startIncome;
+        while(tempIncome != NULL)
+        {
+            if(strcmp(tempIncome->date.year, year) == 0)
+            {
+                amount = atoi(tempIncome->amount);
+                sumIncomes += amount;
+            }
+            tempIncome = tempIncome->link;
+        }
+        setTextColor(AQUA);
+        printf("\n>> ");
+        setTextColor(WHITE);
+        printf("Total incomes in the year %s: ", year);
+        printf("%d Rials\n\n", sumIncomes);
+        printf("--------------------------------------------------\n\n");
+        tempIncome = endIncome = startIncome;
+        while(tempIncome != NULL)
+        {
+            endIncome = tempIncome->link;
+            free(tempIncome);
+            tempIncome = endIncome;
+        }
+        printf("1. Incomes Statistics Menu\n2. EXIT\n\n");
+        printf(">>Please Enter Your Choice: ");
+        choice = getchar();
+        fflush(stdin);
+        while(choice != '1' && choice != '2')
+        {
+            setTextColor(RED);
+            printf("\nERROR: The number entered is invalid! Try again!\n\n");
+            setTextColor(WHITE);
+            printf(">>Please Enter Your Choice: ");
+            choice = getchar();
+            fflush(stdin);
+        }
+        if(choice == '1')
+        {
+            incomesStatisticsMenu();
+        }
         else
         {
             exit(0);
         }
+    }
+    else
+    {
+        while(tempIncome != NULL)
+        {
+            endIncome = tempIncome->link;
+            free(tempIncome);
+            tempIncome = endIncome;
+        }
+        setTextColor(RED);
+        printf("\nERROR: In the year %s no income was recorded!\n\n", year);
+        setTextColor(WHITE);
+        printf("1. Try again!\n2. EXIT\n\n0. Incomes Statistics Menu\n\n");
+        printf(">>Please Enter Your Choice: ");
+        choice = getchar();
+        fflush(stdin);
+        while(choice != '1' && choice != '2' && choice != '0')
+        {
+            setTextColor(RED);
+            printf("\nERROR: The number entered is invalid! Try again!\n\n");
+            setTextColor(WHITE);
+            printf(">>Please Enter Your Choice: ");
+            choice = getchar();
+            fflush(stdin);
+        }
+        if(choice == '1')
+        {
+            totalIncomesYear();
+        }
+        else if(choice == '0')
+        {
+            incomesStatisticsMenu();
+        }
+            else
+            {
+                exit(0);
+            }
+    }
+}
+
+//This function displays the expense statistics menu and goes to the next step based on the user's choice
+void expenseStatisticsMenu(void)
+{
+    char choice;
+    system("cls");
+    printf("--------------- Expenses Statistics Menu ---------------\n\n");
+    printf("1. The total expenses of a certain year\n2. The total expenses in a history interval\n3. The total of a certain type of expense in a history interval\n");
+    printf("4. The ratio of different expenses to each other\n5. The details of expenses in a history interval\n6. The most expense in a history interval\n");
+    printf("7. Search in the expenses description field\n\n0. Statistics Menu\n\n");
+    printf(">>Please Enter Your Choice: ");
+    choice = getchar();
+    fflush(stdin);
+    while(choice != '1' && choice != '2' && choice != '3' && choice != '4' && choice != '5' && choice != '6' && choice != '7' && choice != '0')
+    {
+        setTextColor(RED);
+        printf("\nERROR: The number entered is invalid! Try again!\n\n");
+        setTextColor(WHITE);
+        printf(">>Please Enter Your Choice: ");
+        choice = getchar();
+        fflush(stdin);
+    }
+    if(choice == '1')
+    {
+        totalExpensesYear();
+    }
+    else if(choice == '2')
+    {
+        printf("Go to the total expenses in a history interval");
+    }
+        else if(choice == '3')
+        {
+            printf("Go to the total of a certain type of expense in a history interval");
+        }
+            else if(choice == '4')
+            {
+                printf("Go to the ratio of different expenses to each other");
+            }
+                else if(choice == '5')
+                {
+                    printf("Go to the details of expenses in a history interval");
+                }
+                    else if(choice == '6')
+                    {
+                        printf("Go to the most expense in a history interval");
+                    }
+                        else if(choice == '7')
+                        {
+                            printf("Go to the search in the expenses description field");
+                        }
+                            else
+                            {
+                                statisticsMenu();
+                            }
+}
+
+//This function displays the total expenses of a certain year and goes to the next step based on the user's choice
+void totalExpensesYear(void)
+{
+    int len, exist=0, sumExpenses=0, amount;
+    char year[5], choice;
+    system("cls");
+    printf("--------------- Expenses Statistics ---------------\n\n");
+    printf("Please enter your desired year: ");
+    gets(year);
+    len = strlen(year);
+    while(len != 4)
+    {
+        system("cls");
+        printf("--------------- Expenses Statistics ---------------\n\n");
+        setTextColor(RED);
+        printf("ERROR: The number entered must contain 4 digits!\n\n");
+        setTextColor(WHITE);
+        printf("Please enter your desired year: ");
+        gets(year);
+        len = strlen(year);
+    }
+    char expensesFileName[80] = "Expenses_";
+    strcat(expensesFileName, Name);
+    strcat(expensesFileName, LastName);
+    strcat(expensesFileName, ".txt");
+    struct expense *startExpense, *endExpense, *tempExpense;
+    FILE *f;
+    f = fopen(expensesFileName, "r");
+    if(f != NULL)
+    {
+        tempExpense = malloc(sizeof(struct expense));
+        tempExpense->link = NULL;
+        fread(tempExpense, sizeof(struct expense), 1, f);
+        startExpense = endExpense = tempExpense;
+        while(feof(f) == 0)
+        {
+            tempExpense = malloc(sizeof(struct expense));
+            tempExpense->link = NULL;
+            fread(tempExpense, sizeof(struct expense), 1, f);
+            endExpense->link = tempExpense;
+            endExpense = tempExpense;
+        }
+        fclose(f);
+    }
+    else
+    {
+        printf("File could not be opened!");
+        exit(0);
+    }
+    tempExpense = startExpense;
+    while(tempExpense != NULL)
+    {
+        if(strcmp(tempExpense->date.year, year) == 0)
+        {
+            exist = 1;
+            break;
+        }
+        tempExpense = tempExpense->link;
+    }
+    if(exist == 1)
+    {
+        tempExpense = startExpense;
+        while(tempExpense != NULL)
+        {
+            if(strcmp(tempExpense->date.year, year) == 0)
+            {
+                amount = atoi(tempExpense->amount);
+                sumExpenses += amount;
+            }
+            tempExpense = tempExpense->link;
+        }
+        setTextColor(AQUA);
+        printf("\n>> ");
+        setTextColor(WHITE);
+        printf("Total expenses in the year %s: ", year);
+        printf("%d Rials\n\n", sumExpenses);
+        printf("---------------------------------------------------\n\n");
+        tempExpense = endExpense = startExpense;
+        while(tempExpense != NULL)
+        {
+            endExpense = tempExpense->link;
+            free(tempExpense);
+            tempExpense = endExpense;
+        }
+        printf("1. Expenses Statistics Menu\n2. EXIT\n\n");
+        printf(">>Please Enter Your Choice: ");
+        choice = getchar();
+        fflush(stdin);
+        while(choice != '1' && choice != '2')
+        {
+            setTextColor(RED);
+            printf("\nERROR: The number entered is invalid! Try again!\n\n");
+            setTextColor(WHITE);
+            printf(">>Please Enter Your Choice: ");
+            choice = getchar();
+            fflush(stdin);
+        }
+        if(choice == '1')
+        {
+            expenseStatisticsMenu();
+        }
+        else
+        {
+            exit(0);
+        }
+    }
+    else
+    {
+        while(tempExpense != NULL)
+        {
+            endExpense = tempExpense->link;
+            free(tempExpense);
+            tempExpense = endExpense;
+        }
+        setTextColor(RED);
+        printf("\nERROR: In the year %s no expense was recorded!\n\n", year);
+        setTextColor(WHITE);
+        printf("1. Try again!\n2. EXIT\n\n0. Expenses Statistics Menu\n\n");
+        printf(">>Please Enter Your Choice: ");
+        choice = getchar();
+        fflush(stdin);
+        while(choice != '1' && choice != '2' && choice != '0')
+        {
+            setTextColor(RED);
+            printf("\nERROR: The number entered is invalid! Try again!\n\n");
+            setTextColor(WHITE);
+            printf(">>Please Enter Your Choice: ");
+            choice = getchar();
+            fflush(stdin);
+        }
+        if(choice == '1')
+        {
+            totalExpensesYear();
+        }
+        else if(choice == '0')
+        {
+            expenseStatisticsMenu();
+        }
+            else
+            {
+                exit(0);
+            }
+    }
 }
