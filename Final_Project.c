@@ -11,6 +11,7 @@ void mainMenu(void);
 void income(void);
 void expense(void);
 void statisticsMenu(void);
+void accountBalance(void);
 
 char Name[30], LastName[40];
 
@@ -240,18 +241,7 @@ void signUp(void)
     f = fopen("Profiles.txt", "a");
     if(f != NULL)
     {
-        fprintf(f, "%s", s.name);
-        fputc('\n', f);
-        fprintf(f, "%s", s.last_name);
-        fputc('\n', f);
-        fprintf(f, "%s", s.national_code);
-        fputc('\n', f);
-        fprintf(f, "%s", s.mobile_number);
-        fputc('\n', f);
-        fprintf(f, "%s", s.email);
-        fputc('\n', f);
-        fprintf(f, "%s", s.password);
-        fputc('\n', f);
+        fwrite(&s, sizeof(struct profile), 1, f);
         fclose(f);
         setTextColor(GREEN);
         printf("\nSign Up completed successfully!\n\n");
@@ -263,7 +253,7 @@ void signUp(void)
         printf("File could not be opened!");
         exit(0);
     }
-    printf("1. Main Menu\n2. EXIT\n0. Previous Page\n\n");
+    printf("1. Main Menu\n2. EXIT\n0. Login Menu\n\n");
     printf(">>Please Enter Your Choice: ");
     choice = getchar();
     fflush(stdin);
@@ -304,23 +294,13 @@ void login(void)
     {
         temp = malloc(sizeof(struct profile));
         temp->link = NULL;
-        fscanf(f, "%s", temp->name);
-        fscanf(f, "%s", temp->last_name);
-        fscanf(f, "%s", temp->national_code);
-        fscanf(f, "%s", temp->mobile_number);
-        fscanf(f, "%s", temp->email);
-        fscanf(f, "%s", temp->password);
+        fread(temp, sizeof(struct profile), 1, f);
         start = end = temp;
         while(feof(f) == 0)
         {
             temp = malloc(sizeof(struct profile));
             temp->link = NULL;
-            fscanf(f, "%s", temp->name);
-            fscanf(f, "%s", temp->last_name);
-            fscanf(f, "%s", temp->national_code);
-            fscanf(f, "%s", temp->mobile_number);
-            fscanf(f, "%s", temp->email);
-            fscanf(f, "%s", temp->password);
+            fread(temp, sizeof(struct profile), 1, f);
             end->link = temp;
             end = temp;
         }
@@ -412,6 +392,8 @@ void login(void)
                     }
                 }
             }
+            strcpy(Name, temp->name);
+            strcpy(LastName, temp->last_name);
             mainMenu();
         }
     }
@@ -496,7 +478,7 @@ void mainMenu(void)
                     }
 }
 
-//This function receives income  information and places it in file Incomes and goes to the next step based on the user's choice
+//This function receives income information and places it in file Incomes and goes to the next step based on the user's choice
 void income(void)
 {
     char choice, fileName[80];
@@ -557,18 +539,7 @@ void income(void)
     f = fopen(fileName, "a");
     if(f != NULL)
     {
-        fprintf(f, "%s", i.amount);
-        fputc('\n', f);
-        fprintf(f, "%s", i.source);
-        fputc('\n', f);
-        fprintf(f, "%s", i.date.year);
-        fputc('\n', f);
-        fprintf(f, "%s", i.date.month);
-        fputc('\n', f);
-        fprintf(f, "%s", i.date.day);
-        fputc('\n', f);
-        fprintf(f, "%s", i.description);
-        fputc('\n', f);
+        fwrite(&i, sizeof(struct income), 1, f);
         fclose(f);
         setTextColor(GREEN);
         printf("\nSuccessfully recorded!\n\n");
@@ -607,7 +578,7 @@ void income(void)
         }
 }
 
-//This function receives expense  information and places it in file Expenses and goes to the next step based on the user's choice
+//This function receives expense information and places it in file Expenses and goes to the next step based on the user's choice
 void expense(void)
 {
     char choice, fileName[80];
@@ -680,18 +651,7 @@ void expense(void)
     f = fopen(fileName, "a");
     if(f != NULL)
     {
-        fprintf(f, "%s", e.amount);
-        fputc('\n', f);
-        fprintf(f, "%s", e.item);
-        fputc('\n', f);
-        fprintf(f, "%s", e.date.year);
-        fputc('\n', f);
-        fprintf(f, "%s", e.date.month);
-        fputc('\n', f);
-        fprintf(f, "%s", e.date.day);
-        fputc('\n', f);
-        fprintf(f, "%s", e.description);
-        fputc('\n', f);
+        fwrite(&e, sizeof(struct expense), 1, f);
         fclose(f);
         setTextColor(GREEN);
         printf("\nSuccessfully recorded!\n\n");
@@ -730,6 +690,7 @@ void expense(void)
         }
 }
 
+//This function displays the statistics page and goes to the next step based on the user's choice
 void statisticsMenu(void)
 {
     char choice;
@@ -753,7 +714,7 @@ void statisticsMenu(void)
     }
     if(choice == '1')
     {
-        printf("Go to the Account Balance!");
+        accountBalance();
     }
     else if(choice == '2')
     {
@@ -767,4 +728,131 @@ void statisticsMenu(void)
             {
                 mainMenu();
             }
+}
+
+//This function displays the user account balance and goes to the next step based on the user's choice
+void accountBalance(void)
+{
+    system("cls");
+    printf("--------------- Account Balance ---------------\n\n");
+    char incomesFileName[80] = "Incomes_";
+    strcat(incomesFileName, Name);
+    strcat(incomesFileName, LastName);
+    strcat(incomesFileName, ".txt");
+    struct income *startIncome, *endIncome, *tempIncome;
+    FILE *f;
+    f = fopen(incomesFileName, "r");
+    if(f != NULL)
+    {
+        tempIncome = malloc(sizeof(struct income));
+        tempIncome->link = NULL;
+        fread(tempIncome, sizeof(struct income), 1, f);
+        startIncome = endIncome = tempIncome;
+        while(feof(f) == 0)
+        {
+            tempIncome = malloc(sizeof(struct income));
+            tempIncome->link = NULL;
+            fread(tempIncome, sizeof(struct income), 1, f);
+            endIncome->link = tempIncome;
+            endIncome = tempIncome;
+        }
+        fclose(f);
+    }
+    else
+    {
+        printf("File could not be opened!");
+        exit(0);
+    }
+    char expensesFileName[80] = "Expenses_";
+    strcat(expensesFileName, Name);
+    strcat(expensesFileName, LastName);
+    strcat(expensesFileName, ".txt");
+    struct expense *startExpense, *endExpense, *tempExpense;
+    f = fopen(expensesFileName, "r");
+    if(f != NULL)
+    {
+        tempExpense = malloc(sizeof(struct expense));
+        tempExpense->link = NULL;
+        fread(tempExpense, sizeof(struct expense), 1, f);
+        startExpense = endExpense = tempExpense;
+        while(feof(f) == 0)
+        {
+            tempExpense = malloc(sizeof(struct expense));
+            tempExpense->link = NULL;
+            fread(tempExpense, sizeof(struct expense), 1, f);
+            endExpense->link = tempExpense;
+            endExpense = tempExpense;
+        }
+        fclose(f);
+    }
+    else
+    {
+        printf("File could not be opened!");
+        exit(0);
+    }
+    int amount, sumIncomes=0, sumExpenses=0, accountBalance;
+    tempIncome = startIncome;
+    while(tempIncome != NULL)
+    {
+        amount = atoi(tempIncome->amount);
+        sumIncomes += amount;
+        tempIncome = tempIncome->link;
+    }
+    tempExpense = startExpense;
+    while(tempExpense != NULL)
+    {
+        amount = atoi(tempExpense->amount);
+        sumExpenses += amount;
+        tempExpense = tempExpense->link;
+    }
+    accountBalance = sumIncomes - sumExpenses;
+    printf("Account Balance: ");
+    if(accountBalance > 0)
+    {
+        setTextColor(GREEN);
+        printf("%d", accountBalance);
+        setTextColor(WHITE);
+        printf(" Rials\n\n");
+    }
+    else if(accountBalance < 0)
+    {
+        setTextColor(RED);
+        printf("%d", accountBalance);
+        setTextColor(WHITE);
+        printf(" Rials\n\n");
+        setTextColor(RED);
+        printf("ATTENTION: The negative sign means that your expenses have been more than your incomes!\n\n");
+        setTextColor(WHITE);
+    }
+    else
+    {
+        printf("%d Rials\n\n", accountBalance);
+    }
+    printf("-----------------------------------------------\n\n");
+    char choice;
+    printf("1. Statistics Menu\n2. EXIT\n\n0. Main Menu\n\n");
+    printf(">>Please Enter Your Choice: ");
+    choice = getchar();
+    fflush(stdin);
+    while(choice != '1' && choice != '2' && choice != '0')
+    {
+        setTextColor(RED);
+        printf("\nERROR: The number entered is invalid! Try again!\n\n");
+        setTextColor(WHITE);
+        printf(">>Please Enter Your Choice: ");
+        choice = getchar();
+        fflush(stdin);
+    }
+    if(choice == '1')
+    {
+        statisticsMenu();
+    }
+    else if(choice == '0')
+    {
+        mainMenu();
+    }
+        else
+        {
+            exit(0);
+        }
 }
