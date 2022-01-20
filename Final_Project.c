@@ -3,8 +3,11 @@
 #include<string.h>
 #include<windows.h>
 #include<conio.h>
+#include<ctype.h>
 
 void loginMenu(void);
+int checkFormatName(char *x);
+int checkFormatNationalCode(char *x);
 void signUp(void);
 void login(void);
 void mainMenu(void);
@@ -118,21 +121,140 @@ void loginMenu(void)
         }
 }
 
+//This function receives a string(name or last name) and checks its format(returns 1 if the string format is correct, otherwise returns 0)
+int checkFormatName(char *x)
+{
+    int a;
+    if(*x == '\0')
+    {
+        return 0;
+    }
+    else
+    {
+        while(*x != '\0')
+        {
+            a = isalpha(*x);
+            if(a == 0)
+            {
+                return 0;
+                break;
+            }
+            x++;
+        }
+        return 1;
+    }
+}
+
+//This function receives a string(national code) and checks its format(returns 0: if the national code has at least one non-numeric character, returns 1: if national code is not 10 digits, return 2: if national code is correct)
+int checkFormatNationalCode(char *x)
+{
+    int d, n=0;
+    if(*x == '\0')
+    {
+        return 1;
+    }
+    else
+    {
+        while(*x != '\0')
+        {
+            n++;
+            d = isdigit(*x);
+            if(d == 0)
+            {
+                return 0;
+                break;
+            }
+            x++;
+        }
+        if(n == 10)
+        {
+            return 2;
+        }
+        else
+        {
+            return 1;
+        }
+    }
+}
+
 //This function receives user  information and places it in file Profiles and goes to the next step based on the user's choice
 void signUp(void)
 {
     struct profile s;
     s.link = NULL;
-    int i=0;
-    char password[30], password2[30], ch, choice;
+    int i=0, res;
+    char name[30], last_name[40], national_code[11], password[30], password2[30], ch, choice;
     system("cls");
     printf("--------------- Sign Up ---------------\n\n");
     printf("Enter your name: ");
-    gets(s.name);
+    gets(name);
+    res = checkFormatName(name);
+    if(res == 1)
+    {
+        strcpy(s.name, name);
+    }
+    else
+    {
+        while(res == 0)
+        {
+            setTextColor(RED);
+            printf("\nERROR: The name entered must contain only characters!\n\n");
+            setTextColor(WHITE);
+            printf("Enter your name: ");
+            gets(name);
+            res = checkFormatName(name);
+        }
+        strcpy(s.name, name);
+    }
     printf("Enter your last name: ");
-    gets(s.last_name);
+    gets(last_name);
+    res = checkFormatName(last_name);
+    if(res == 1)
+    {
+        strcpy(s.last_name, last_name);
+    }
+    else
+    {
+        while(res == 0)
+        {
+            setTextColor(RED);
+            printf("\nERROR: The last name entered must contain only characters!\n\n");
+            setTextColor(WHITE);
+            printf("Enter your last name: ");
+            gets(last_name);
+            res = checkFormatName(last_name);
+        }
+        strcpy(s.last_name, last_name);
+    }
     printf("Enter your national code: ");
-    gets(s.national_code);
+    gets(national_code);
+    res = checkFormatNationalCode(national_code);
+    if(res == 2)
+    {
+        strcpy(s.national_code, national_code);
+    }
+    else
+    {
+        while(res != 2)
+        {
+            if(res == 1)
+            {
+                setTextColor(RED);
+                printf("\nERROR: The national code entered must contain 10 digits!\n\n");
+                setTextColor(WHITE);
+            }
+            else
+            {
+                setTextColor(RED);
+                printf("\nERROR: The national code entered must contain only digits!\n\n");
+                setTextColor(WHITE);
+            }
+            printf("Enter your national code: ");
+            gets(national_code);
+            res = checkFormatNationalCode(national_code);
+        }
+        strcpy(s.national_code, national_code);
+    }
     printf("Enter your mobile number: ");
     gets(s.mobile_number);
     printf("Enter your email: ");
