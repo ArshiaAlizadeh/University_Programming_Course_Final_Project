@@ -8,6 +8,8 @@
 void loginMenu(void);
 int checkFormatName(char *x);
 int checkFormatNationalCode(char *x);
+int checkFormatMobileNumber(char *x);
+int checkFormatPassword(char *x);
 void signUp(void);
 void login(void);
 void mainMenu(void);
@@ -18,11 +20,21 @@ void accountBalance(void);
 void incomesStatisticsMenu(void);
 void totalIncomesYear(void);
 void totalIncomesInterval(void);
+void totalCertainIncomeInterval(void);
+void ratioIncomesInterval(void);
+void detailsIncomesInterval(void);
+void mostIncomeInterval(void);
+void wordSearchIncomesDescription(void);
 void expensesStatisticsMenu(void);
 void totalExpensesYear(void);
 void totalExpensesInterval(void);
+void totalCertainExpenseInterval(void);
+void ratioExpensesInterval(void);
+void detailsExpensesInterval(void);
+void mostExpenseInterval(void);
+void settings(void);
 
-char Name[30], LastName[40];
+char Name[30], LastName[40], NationalCode[11];
 
 struct profile{
     char name[30];
@@ -177,13 +189,87 @@ int checkFormatNationalCode(char *x)
     }
 }
 
-//This function receives user  information and places it in file Profiles and goes to the next step based on the user's choice
+//This function receives a string(mobile number) and checks its format(returns 0: if the mobile number has at least one non-numeric character, returns 1: if mobile number is not 11 digits, return 2: if mobile number is correct)
+int checkFormatMobileNumber(char *x)
+{
+    int d, n=0;
+    if(*x == '\0')
+    {
+        return 1;
+    }
+    else
+    {
+        while(*x != '\0')
+        {
+            n++;
+            d = isdigit(*x);
+            if(d == 0)
+            {
+                return 0;
+                break;
+            }
+            x++;
+        }
+        if(n == 11)
+        {
+            return 2;
+        }
+        else
+        {
+            return 1;
+        }
+    }
+}
+
+//This function receives a string(password) and checks its format(returns 0: if the password has not at least one digit and one uppercase and one lowercase, returns 1: if password does not have at least 6 characters, return 2: if password is correct)
+int checkFormatPassword(char *x)
+{
+    int digit=0, uppercase=0, lowercase=0, n=0;
+    if(*x == '\0')
+    {
+        return 1;
+    }
+    else
+    {
+        while(*x != '\0')
+        {
+            n++;
+            if(1 == isdigit(*x))
+            {
+                digit = 1;
+            }
+            else if(1 == isupper(*x))
+            {
+                uppercase = 1;
+            }
+            else if(2 == islower(*x))
+            {
+                lowercase = 1;
+            }
+            x++;
+        }
+        if(n < 6)
+        {
+            return 1;
+        }
+        else if((digit != 1) || (uppercase != 1) || (lowercase != 1))
+        {
+            return 0;
+        }
+        else
+        {
+            return 2;
+        }
+    }
+}
+
+//This function receives user information and places it in file Profiles and goes to the next step based on the user's choice
 void signUp(void)
 {
     struct profile s;
     s.link = NULL;
-    int i=0, res;
-    char name[30], last_name[40], national_code[11], password[30], password2[30], ch, choice;
+    int i=0, j=1, res, lenPassword;
+    char name[30], last_name[40], national_code[11], mobile_number[12], password[30], password2[30], codedPassword[30], ch, choice;
     system("cls");
     printf("--------------- Sign Up ---------------\n\n");
     printf("Enter your name: ");
@@ -256,7 +342,34 @@ void signUp(void)
         strcpy(s.national_code, national_code);
     }
     printf("Enter your mobile number: ");
-    gets(s.mobile_number);
+    gets(mobile_number);
+    res = checkFormatMobileNumber(mobile_number);
+    if(res == 2)
+    {
+        strcpy(s.mobile_number, mobile_number);
+    }
+    else
+    {
+        while(res != 2)
+        {
+            if(res == 1)
+            {
+                setTextColor(RED);
+                printf("\nERROR: The mobile number entered must contain 11 digits!\n\n");
+                setTextColor(WHITE);
+            }
+            else
+            {
+                setTextColor(RED);
+                printf("\nERROR: The mobile number entered must contain only digits!\n\n");
+                setTextColor(WHITE);
+            }
+            printf("Enter your mobile number: ");
+            gets(mobile_number);
+            res = checkFormatMobileNumber(mobile_number);
+        }
+        strcpy(s.mobile_number, mobile_number);
+    }
     printf("Enter your email: ");
     gets(s.email);
     printf("Enter your password: ");
@@ -282,40 +395,86 @@ void signUp(void)
             break;
         }
     }
-    printf("Re-enter your password: ");
-    while(1)
+    res = checkFormatPassword(password);
+    if(res == 2)
     {
-        ch = getch();
-        if((ch>='a'&&ch<='z')||(ch>='A'&&ch<='Z')||(ch>='0'&&ch<='9'))
+        printf("Re-enter your password: ");
+        while(1)
         {
-            password2[i] = ch;
-            i++;
-            printf("*");
+            ch = getch();
+            if((ch>='a'&&ch<='z')||(ch>='A'&&ch<='Z')||(ch>='0'&&ch<='9'))
+            {
+                password2[i] = ch;
+                i++;
+                printf("*");
+            }
+            if(ch=='\b'&&i>=1)
+            {
+                printf("\b \b");
+                i--;
+            }
+            if(ch=='\r')
+            {
+                password2[i] = '\0';
+                i = 0;
+                printf("\n");
+                break;
+            }
         }
-        if(ch=='\b'&&i>=1)
+        if(strcmp(password, password2) == 0)
         {
-            printf("\b \b");
-            i--;
+            strcpy(s.password, password);
         }
-        if(ch=='\r')
+        else
         {
-            password2[i] = '\0';
-            i = 0;
-            printf("\n");
-            break;
+            while(strcmp(password, password2) != 0)
+            {
+                setTextColor(RED);
+                printf("\nERROR: The re-password is incorrect! Try again!\n\n");
+                setTextColor(WHITE);
+                printf("Re-enter your password: ");
+                while(1)
+                {
+                    ch = getch();
+                    if((ch>='a'&&ch<='z')||(ch>='A'&&ch<='Z')||(ch>='0'&&ch<='9'))
+                    {
+                        password2[i] = ch;
+                        i++;
+                        printf("*");
+                    }
+                    if(ch=='\b'&&i>=1)
+                    {
+                        printf("\b \b");
+                        i--;
+                    }
+                    if(ch=='\r')
+                    {
+                        password2[i] = '\0';
+                        i = 0;
+                        printf("\n");
+                        break;
+                    }
+                }
+            }
+            strcpy(s.password, password);
         }
-    }
-    if(strcmp(password, password2) == 0)
-    {
-        strcpy(s.password, password);
     }
     else
     {
-        while(strcmp(password, password2) != 0)
+        while(res != 2)
         {
-            setTextColor(RED);
-            printf("\nERROR: The password is incorrect! Try again!\n\n");
-            setTextColor(WHITE);
+            if(res == 1)
+            {
+                setTextColor(RED);
+                printf("\nERROR: The password entered must contain at least 6 characters!\n\n");
+                setTextColor(WHITE);
+            }
+            else
+            {
+                setTextColor(RED);
+                printf("\nERROR: The password entered must contain at least one digit, one uppercase and one lowercase letter!\n\n");
+                setTextColor(WHITE);
+            }
             printf("Enter your password: ");
             while(1)
             {
@@ -339,32 +498,77 @@ void signUp(void)
                     break;
                 }
             }
-            printf("Re-enter your password: ");
-            while(1)
+            res = checkFormatPassword(password);
+        }
+        printf("Re-enter your password: ");
+        while(1)
+        {
+            ch = getch();
+            if((ch>='a'&&ch<='z')||(ch>='A'&&ch<='Z')||(ch>='0'&&ch<='9'))
             {
-                ch = getch();
-                if((ch>='a'&&ch<='z')||(ch>='A'&&ch<='Z')||(ch>='0'&&ch<='9'))
-                {
-                    password2[i] = ch;
-                    i++;
-                    printf("*");
-                }
-                if(ch=='\b'&&i>=1)
-                {
-                    printf("\b \b");
-                    i--;
-                }
-                if(ch=='\r')
-                {
-                    password2[i] = '\0';
-                    i = 0;
-                    printf("\n");
-                    break;
-                }
+                password2[i] = ch;
+                i++;
+                printf("*");
+            }
+            if(ch=='\b'&&i>=1)
+            {
+                printf("\b \b");
+                i--;
+            }
+            if(ch=='\r')
+            {
+                password2[i] = '\0';
+                i = 0;
+                printf("\n");
+                break;
             }
         }
-        strcpy(s.password, password);
+        if(strcmp(password, password2) == 0)
+        {
+            strcpy(s.password, password);
+        }
+        else
+        {
+            while(strcmp(password, password2) != 0)
+            {
+                setTextColor(RED);
+                printf("\nERROR: The re-password is incorrect! Try again!\n\n");
+                setTextColor(WHITE);
+                printf("Re-enter your password: ");
+                while(1)
+                {
+                    ch = getch();
+                    if((ch>='a'&&ch<='z')||(ch>='A'&&ch<='Z')||(ch>='0'&&ch<='9'))
+                    {
+                        password2[i] = ch;
+                        i++;
+                        printf("*");
+                    }
+                    if(ch=='\b'&&i>=1)
+                    {
+                        printf("\b \b");
+                        i--;
+                    }
+                    if(ch=='\r')
+                    {
+                        password2[i] = '\0';
+                        i = 0;
+                        printf("\n");
+                        break;
+                    }
+                }
+            }
+            strcpy(s.password, password);
+        }
     }
+    lenPassword = strlen(password);
+    for(i=0; i<lenPassword; i++)
+    {
+        codedPassword[i] = password[i] + j;
+        j++;
+    }
+    codedPassword[i] = '\0';
+    strcpy(s.password, codedPassword);
     FILE *f;
     f = fopen("Profiles.txt", "a");
     if(f != NULL)
@@ -414,7 +618,7 @@ void signUp(void)
 void login(void)
 {
     char choice;
-    int exist = 0;
+    int exist = 0, j=0, k=1, lenPassword;
     struct profile *start, *end, *temp;
     FILE *f;
     f = fopen("Profiles.txt", "r");
@@ -440,7 +644,7 @@ void login(void)
         exit(0);
     }
     int i=0;
-    char userName[12], password[31], ch;
+    char userName[12], password[31], codedPassword[31], ch;
     system("cls");
     printf("--------------- Login ---------------\n\n");
     setTextColor(RED);
@@ -483,10 +687,19 @@ void login(void)
                 break;
             }
         }
-        if(strcmp(temp->password, password) == 0)
+        k=1;
+        lenPassword = strlen(password);
+        for(j=0; j<lenPassword; j++)
+        {
+            codedPassword[j] = password[j] + k;
+            k++;
+        }
+        codedPassword[j] = '\0';
+        if(strcmp(temp->password, codedPassword) == 0)
         {
             strcpy(Name, temp->name);
             strcpy(LastName, temp->last_name);
+            strcpy(NationalCode, temp->national_code);
             temp = end = start;
             while(temp != NULL)
             {
@@ -498,7 +711,7 @@ void login(void)
         }
         else
         {
-            while(strcmp(temp->password, password) != 0)
+            while(strcmp(temp->password, codedPassword) != 0)
             {
                 setTextColor(RED);
                 printf("\nERROR: The password is incorrect! Try again!\n\n");
@@ -526,9 +739,18 @@ void login(void)
                         break;
                     }
                 }
+                k=1;
+                lenPassword = strlen(password);
+                for(j=0; j<lenPassword; j++)
+                {
+                    codedPassword[j] = password[j] + k;
+                    k++;
+                }
+                codedPassword[j]  = '\0';
             }
             strcpy(Name, temp->name);
             strcpy(LastName, temp->last_name);
+            strcpy(NationalCode, temp->national_code);
             temp = end = start;
             while(temp != NULL)
             {
@@ -614,7 +836,7 @@ void mainMenu(void)
         }
             else if(choice == '4')
             {
-                printf("Go to the Settings");
+                settings();
             }
                 else if(choice == '5')
                 {
@@ -1025,7 +1247,7 @@ void incomesStatisticsMenu(void)
     system("cls");
     printf("--------------- Incomes Statistics Menu ---------------\n\n");
     printf("1. The total incomes of a certain year\n2. The total incomes in a history interval\n3. The total of a certain type of income in a history interval\n");
-    printf("4. The ratio of different incomes to each other\n5. The details of incomes in a history interval\n6. The most income in a history interval\n");
+    printf("4. The ratio of different incomes to each other in a history interval\n5. The details of incomes in a history interval\n6. The most income in a history interval\n");
     printf("7. Search in the incomes description field\n\n0. Statistics Menu\n\n");
     printf(">>Please Enter Your Choice: ");
     choice = getchar();
@@ -1049,23 +1271,23 @@ void incomesStatisticsMenu(void)
     }
         else if(choice == '3')
         {
-            printf("Go to the total of a certain type of income in a history interval");
+            totalCertainIncomeInterval();
         }
             else if(choice == '4')
             {
-                printf("Go to the ratio of different incomes to each other");
+                ratioIncomesInterval();
             }
                 else if(choice == '5')
                 {
-                    printf("Go to the details of incomes in a history interval");
+                    detailsIncomesInterval();
                 }
                     else if(choice == '6')
                     {
-                        printf("Go to the most income in a history interval");
+                        mostIncomeInterval();
                     }
                         else if(choice == '7')
                         {
-                            printf("Go to the search in the incomes description field");
+                            wordSearchIncomesDescription();
                         }
                             else
                             {
@@ -1504,6 +1726,1523 @@ void totalIncomesInterval(void)
     }
 }
 
+//This function displays the total of a certain type of income of a history interval and goes to the next step based on the user's choice
+void totalCertainIncomeInterval(void)
+{
+    int beginningYearInt, beginningMonthInt, beginningDayInt, endYearInt, endMonthInt, endDayInt, yearInt, monthInt, dayInt, correct=0, ok=0, exist=0, sumIncomes=0, amount;
+    char beginningYear[5], beginningMonth[3], beginningDay[3], endYear[5], endMonth[3], endDay[3], incomeType[20], choice;
+    system("cls");
+    printf("--------------- Incomes Statistics ---------------\n\n");
+    printf("Please enter the beginning of the interval(YYYY/MM/DD): ");
+    scanf("%4s/%2s/%2s", beginningYear, beginningMonth, beginningDay);
+    fflush(stdin);
+    printf("Please enter the end of the interval(YYYY/MM/DD): ");
+    scanf("%4s/%2s/%2s", endYear, endMonth, endDay);
+    fflush(stdin);
+    beginningYearInt = atoi(beginningYear);
+    beginningMonthInt = atoi(beginningMonth);
+    beginningDayInt = atoi(beginningDay);
+    endYearInt = atoi(endYear);
+    endMonthInt = atoi(endMonth);
+    endDayInt = atoi(endDay);
+    if(beginningYearInt == endYearInt)
+    {
+        if(beginningMonthInt == endMonthInt)
+        {
+            if(beginningDayInt <= endDayInt)
+            {
+                correct = 1;
+            }
+        }
+        else if(beginningMonthInt < endMonthInt)
+        {
+            correct = 1;
+        }
+    }
+    else if(beginningYearInt < endYearInt)
+    {
+        correct = 1;
+    }
+    while(correct == 0)
+    {
+        system("cls");
+        printf("--------------- Incomes Statistics ---------------\n\n");
+        setTextColor(RED);
+        printf("ERROR: The beginning date of the interval must be before the end date of the interval!\n\n");
+        setTextColor(WHITE);
+        printf("Please enter the beginning of the interval(YYYY/MM/DD): ");
+        scanf("%4s/%2s/%2s", beginningYear, beginningMonth, beginningDay);
+        fflush(stdin);
+        printf("Please enter the end of the interval(YYYY/MM/DD): ");
+        scanf("%4s/%2s/%2s", endYear, endMonth, endDay);
+        fflush(stdin);
+        beginningYearInt = atoi(beginningYear);
+        beginningMonthInt = atoi(beginningMonth);
+        beginningDayInt = atoi(beginningDay);
+        endYearInt = atoi(endYear);
+        endMonthInt = atoi(endMonth);
+        endDayInt = atoi(endDay);
+        if(beginningYearInt == endYearInt)
+        {
+            if(beginningMonthInt == endMonthInt)
+            {
+                if(beginningDayInt <= endDayInt)
+                {
+                    correct = 1;
+                }
+            }
+            else if(beginningMonthInt < endMonthInt)
+            {
+                correct = 1;
+            }
+        }
+        else if(beginningYearInt < endYearInt)
+        {
+            correct = 1;
+        }
+    }
+    printf("\nPlease specify income type:\n\n");
+    printf("1. Programming Salary\n2. YARANEH\n3. Pocket Money\n4. University Grant\n\n");
+    printf(">>Please Enter Your Choice: ");
+    choice = getchar();
+    fflush(stdin);
+    while(choice != '1' && choice != '2' && choice != '3' && choice != '4')
+    {
+        printf("\nPlease specify income type:\n\n");
+        printf("1. Programming Salary\n2. YARANEH\n3. Pocket Money\n4. University Grant\n\n");
+        setTextColor(RED);
+        printf("ERROR: The number entered is invalid! Try again!\n\n");
+        setTextColor(WHITE);
+        printf(">>Please Enter Your Choice: ");
+        choice = getchar();
+        fflush(stdin);
+    }
+    if(choice == '1')
+    {
+        strcpy(incomeType, "Programming Salary");
+    }
+    else if(choice == '2')
+    {
+        strcpy(incomeType, "YARANEH");
+    }
+        else if(choice == '3')
+        {
+            strcpy(incomeType, "Pocket Money");
+        }
+            else if(choice == '4')
+            {
+                strcpy(incomeType, "University Grant");
+            }
+    char incomesFileName[80] = "Incomes_";
+    strcat(incomesFileName, Name);
+    strcat(incomesFileName, LastName);
+    strcat(incomesFileName, ".txt");
+    struct income *startIncome, *endIncome, *tempIncome;
+    FILE *f;
+    f = fopen(incomesFileName, "r");
+    if(f != NULL)
+    {
+        tempIncome = malloc(sizeof(struct income));
+        tempIncome->link = NULL;
+        fread(tempIncome, sizeof(struct income), 1, f);
+        startIncome = endIncome = tempIncome;
+        while(feof(f) == 0)
+        {
+            tempIncome = malloc(sizeof(struct income));
+            tempIncome->link = NULL;
+            fread(tempIncome, sizeof(struct income), 1, f);
+            endIncome->link = tempIncome;
+            endIncome = tempIncome;
+        }
+        fclose(f);
+    }
+    else
+    {
+        printf("File could not be opened!");
+        exit(0);
+    }
+    tempIncome = startIncome;
+    while(tempIncome != NULL)
+    {
+        ok = 0;
+        yearInt = atoi(tempIncome->date.year);
+        monthInt = atoi(tempIncome->date.month);
+        dayInt = atoi(tempIncome->date.day);
+        if(beginningYearInt == yearInt)
+        {
+            if(beginningMonthInt == monthInt)
+            {
+                if(beginningDayInt <= dayInt)
+                {
+                    ok = 1;
+                }
+            }
+            else if(beginningMonthInt < monthInt)
+            {
+                ok = 1;
+            }
+        }
+        else if(beginningYearInt < yearInt)
+        {
+            ok = 1;
+        }
+        if(ok == 1)
+        {
+            if(endYearInt == yearInt)
+            {
+                if(endMonthInt == monthInt)
+                {
+                    if(endDayInt >= dayInt)
+                    {
+                        if(strcmp(incomeType, tempIncome->source) == 0)
+                        {
+                            exist = 1;
+                            ok = 0;
+                            break;
+                        }
+                    }
+                }
+                else if(endMonthInt > monthInt)
+                {
+                    if(strcmp(incomeType, tempIncome->source) == 0)
+                    {
+                        exist = 1;
+                        ok = 0;
+                        break;
+                    }
+                }
+            }
+            else if(endYearInt > yearInt)
+            {
+                if(strcmp(incomeType, tempIncome->source) == 0)
+                {
+                    exist = 1;
+                    ok = 0;
+                    break;
+                }
+            }
+        }
+        tempIncome = tempIncome->link;
+    }
+    if(exist == 1)
+    {
+        tempIncome = startIncome;
+        while(tempIncome != NULL)
+        {
+            ok = 0;
+            yearInt = atoi(tempIncome->date.year);
+            monthInt = atoi(tempIncome->date.month);
+            dayInt = atoi(tempIncome->date.day);
+            if(beginningYearInt == yearInt)
+            {
+                if(beginningMonthInt == monthInt)
+                {
+                    if(beginningDayInt <= dayInt)
+                    {
+                        ok = 1;
+                    }
+                }
+                else if(beginningMonthInt < monthInt)
+                {
+                    ok = 1;
+                }
+            }
+            else if(beginningYearInt < yearInt)
+            {
+                ok = 1;
+            }
+            if(ok == 1)
+            {
+                if(endYearInt == yearInt)
+                {
+                    if(endMonthInt == monthInt)
+                    {
+                        if(endDayInt >= dayInt)
+                        {
+                            if(strcmp(incomeType, tempIncome->source) == 0)
+                            {
+                                amount = atoi(tempIncome->amount);
+                                sumIncomes += amount;
+                            }
+                        }
+                    }
+                    else if(endMonthInt > monthInt)
+                    {
+                        if(strcmp(incomeType, tempIncome->source) == 0)
+                        {
+                            amount = atoi(tempIncome->amount);
+                            sumIncomes += amount;
+                        }
+                    }
+                }
+                else if(endYearInt > yearInt)
+                {
+                    if(strcmp(incomeType, tempIncome->source) == 0)
+                    {
+                        amount = atoi(tempIncome->amount);
+                        sumIncomes += amount;
+                    }
+                }
+            }
+            tempIncome = tempIncome->link;
+        }
+        setTextColor(AQUA);
+        printf("\n>> ");
+        setTextColor(WHITE);
+        printf("Total income from %s between %s/%s/%s and %s/%s/%s: ", incomeType, beginningYear, beginningMonth, beginningDay, endYear, endMonth, endDay);
+        printf("%d Rials\n\n", sumIncomes);
+        printf("--------------------------------------------------\n\n");
+        tempIncome = endIncome = startIncome;
+        while(tempIncome != NULL)
+        {
+            endIncome = tempIncome->link;
+            free(tempIncome);
+            tempIncome = endIncome;
+        }
+        printf("1. Incomes Statistics Menu\n2. EXIT\n\n");
+        printf(">>Please Enter Your Choice: ");
+        choice = getchar();
+        fflush(stdin);
+        while(choice != '1' && choice != '2')
+        {
+            setTextColor(RED);
+            printf("\nERROR: The number entered is invalid! Try again!\n\n");
+            setTextColor(WHITE);
+            printf(">>Please Enter Your Choice: ");
+            choice = getchar();
+            fflush(stdin);
+        }
+        if(choice == '1')
+        {
+            incomesStatisticsMenu();
+        }
+        else
+        {
+            exit(0);
+        }
+    }
+    else
+    {
+        tempIncome = endIncome = startIncome;
+        while(tempIncome != NULL)
+        {
+            endIncome = tempIncome->link;
+            free(tempIncome);
+            tempIncome = endIncome;
+        }
+        setTextColor(RED);
+        printf("\nERROR: No income from %s was recorded between %s/%s/%s and %s/%s/%s!\n\n", incomeType, beginningYear, beginningMonth, beginningDay, endYear, endMonth, endDay);
+        setTextColor(WHITE);
+        printf("1. Try again!\n2. EXIT\n\n0. Incomes Statistics Menu\n\n");
+        printf(">>Please Enter Your Choice: ");
+        choice = getchar();
+        fflush(stdin);
+        while(choice != '1' && choice != '2' && choice != '0')
+        {
+            setTextColor(RED);
+            printf("\nERROR: The number entered is invalid! Try again!\n\n");
+            setTextColor(WHITE);
+            printf(">>Please Enter Your Choice: ");
+            choice = getchar();
+            fflush(stdin);
+        }
+        if(choice == '1')
+        {
+            totalCertainIncomeInterval();
+        }
+        else if(choice == '0')
+        {
+            incomesStatisticsMenu();
+        }
+            else
+            {
+                exit(0);
+            }
+    }
+}
+
+//This function displays the ratio of different incomes to each other in a history interval and goes to the next step based on the user's choice
+void ratioIncomesInterval(void)
+{
+    int beginningYearInt, beginningMonthInt, beginningDayInt, endYearInt, endMonthInt, endDayInt, yearInt, monthInt, dayInt, correct=0, ok=0, exist=0;
+    int sumIncomes=0, sumProgrammingSlary=0, sumYARANEH=0, sumPocketMoney=0, sumUniversityGrant=0, amount;
+    char beginningYear[5], beginningMonth[3], beginningDay[3], endYear[5], endMonth[3], endDay[3], choice;
+    system("cls");
+    printf("--------------- Incomes Statistics ---------------\n\n");
+    printf("Please enter the beginning of the interval(YYYY/MM/DD): ");
+    scanf("%4s/%2s/%2s", beginningYear, beginningMonth, beginningDay);
+    fflush(stdin);
+    printf("Please enter the end of the interval(YYYY/MM/DD): ");
+    scanf("%4s/%2s/%2s", endYear, endMonth, endDay);
+    fflush(stdin);
+    beginningYearInt = atoi(beginningYear);
+    beginningMonthInt = atoi(beginningMonth);
+    beginningDayInt = atoi(beginningDay);
+    endYearInt = atoi(endYear);
+    endMonthInt = atoi(endMonth);
+    endDayInt = atoi(endDay);
+    if(beginningYearInt == endYearInt)
+    {
+        if(beginningMonthInt == endMonthInt)
+        {
+            if(beginningDayInt <= endDayInt)
+            {
+                correct = 1;
+            }
+        }
+        else if(beginningMonthInt < endMonthInt)
+        {
+            correct = 1;
+        }
+    }
+    else if(beginningYearInt < endYearInt)
+    {
+        correct = 1;
+    }
+    while(correct == 0)
+    {
+        system("cls");
+        printf("--------------- Incomes Statistics ---------------\n\n");
+        setTextColor(RED);
+        printf("ERROR: The beginning date of the interval must be before the end date of the interval!\n\n");
+        setTextColor(WHITE);
+        printf("Please enter the beginning of the interval(YYYY/MM/DD): ");
+        scanf("%4s/%2s/%2s", beginningYear, beginningMonth, beginningDay);
+        fflush(stdin);
+        printf("Please enter the end of the interval(YYYY/MM/DD): ");
+        scanf("%4s/%2s/%2s", endYear, endMonth, endDay);
+        fflush(stdin);
+        beginningYearInt = atoi(beginningYear);
+        beginningMonthInt = atoi(beginningMonth);
+        beginningDayInt = atoi(beginningDay);
+        endYearInt = atoi(endYear);
+        endMonthInt = atoi(endMonth);
+        endDayInt = atoi(endDay);
+        if(beginningYearInt == endYearInt)
+        {
+            if(beginningMonthInt == endMonthInt)
+            {
+                if(beginningDayInt <= endDayInt)
+                {
+                    correct = 1;
+                }
+            }
+            else if(beginningMonthInt < endMonthInt)
+            {
+                correct = 1;
+            }
+        }
+        else if(beginningYearInt < endYearInt)
+        {
+            correct = 1;
+        }
+    }
+    char incomesFileName[80] = "Incomes_";
+    strcat(incomesFileName, Name);
+    strcat(incomesFileName, LastName);
+    strcat(incomesFileName, ".txt");
+    struct income *startIncome, *endIncome, *tempIncome;
+    FILE *f;
+    f = fopen(incomesFileName, "r");
+    if(f != NULL)
+    {
+        tempIncome = malloc(sizeof(struct income));
+        tempIncome->link = NULL;
+        fread(tempIncome, sizeof(struct income), 1, f);
+        startIncome = endIncome = tempIncome;
+        while(feof(f) == 0)
+        {
+            tempIncome = malloc(sizeof(struct income));
+            tempIncome->link = NULL;
+            fread(tempIncome, sizeof(struct income), 1, f);
+            endIncome->link = tempIncome;
+            endIncome = tempIncome;
+        }
+        fclose(f);
+    }
+    else
+    {
+        printf("File could not be opened!");
+        exit(0);
+    }
+    tempIncome = startIncome;
+    while(tempIncome != NULL)
+    {
+        ok = 0;
+        yearInt = atoi(tempIncome->date.year);
+        monthInt = atoi(tempIncome->date.month);
+        dayInt = atoi(tempIncome->date.day);
+        if(beginningYearInt == yearInt)
+        {
+            if(beginningMonthInt == monthInt)
+            {
+                if(beginningDayInt <= dayInt)
+                {
+                    ok = 1;
+                }
+            }
+            else if(beginningMonthInt < monthInt)
+            {
+                ok = 1;
+            }
+        }
+        else if(beginningYearInt < yearInt)
+        {
+            ok = 1;
+        }
+        if(ok == 1)
+        {
+            if(endYearInt == yearInt)
+            {
+                if(endMonthInt == monthInt)
+                {
+                    if(endDayInt >= dayInt)
+                    {
+                        exist = 1;
+                        ok = 0;
+                        break;
+                    }
+                }
+                else if(endMonthInt > monthInt)
+                {
+                    exist = 1;
+                    ok = 0;
+                    break;
+                }
+            }
+            else if(endYearInt > yearInt)
+            {
+                exist = 1;
+                ok = 0;
+                break;
+            }
+        }
+        tempIncome = tempIncome->link;
+    }
+    if(exist == 1)
+    {
+        tempIncome = startIncome;
+        while(tempIncome != NULL)
+        {
+            ok = 0;
+            yearInt = atoi(tempIncome->date.year);
+            monthInt = atoi(tempIncome->date.month);
+            dayInt = atoi(tempIncome->date.day);
+            if(beginningYearInt == yearInt)
+            {
+                if(beginningMonthInt == monthInt)
+                {
+                    if(beginningDayInt <= dayInt)
+                    {
+                        ok = 1;
+                    }
+                }
+                else if(beginningMonthInt < monthInt)
+                {
+                    ok = 1;
+                }
+            }
+            else if(beginningYearInt < yearInt)
+            {
+                ok = 1;
+            }
+            if(ok == 1)
+            {
+                if(endYearInt == yearInt)
+                {
+                    if(endMonthInt == monthInt)
+                    {
+                        if(endDayInt >= dayInt)
+                        {
+                            amount = atoi(tempIncome->amount);
+                            sumIncomes += amount;
+                            if(strcmp(tempIncome->source, "Programming Salary") == 0)
+                            {
+                                sumProgrammingSlary += amount;
+                            }
+                            else if(strcmp(tempIncome->source, "YARANEH") == 0)
+                            {
+                                sumYARANEH += amount;
+                            }
+                                else if(strcmp(tempIncome->source, "Pocket Money") == 0)
+                                {
+                                    sumPocketMoney += amount;
+                                }
+                                    else if(strcmp(tempIncome->source, "University Grant") == 0)
+                                    {
+                                        sumUniversityGrant += amount;
+                                    }
+                        }
+                    }
+                    else if(endMonthInt > monthInt)
+                    {
+                        amount = atoi(tempIncome->amount);
+                        sumIncomes += amount;
+                        if(strcmp(tempIncome->source, "Programming Salary") == 0)
+                            {
+                                sumProgrammingSlary += amount;
+                            }
+                            else if(strcmp(tempIncome->source, "YARANEH") == 0)
+                            {
+                                sumYARANEH += amount;
+                            }
+                                else if(strcmp(tempIncome->source, "Pocket Money") == 0)
+                                {
+                                    sumPocketMoney += amount;
+                                }
+                                    else if(strcmp(tempIncome->source, "University Grant") == 0)
+                                    {
+                                        sumUniversityGrant += amount;
+                                    }
+                    }
+                }
+                else if(endYearInt > yearInt)
+                {
+                    amount = atoi(tempIncome->amount);
+                    sumIncomes += amount;
+                    if(strcmp(tempIncome->source, "Programming Salary") == 0)
+                        {
+                            sumProgrammingSlary += amount;
+                        }
+                        else if(strcmp(tempIncome->source, "YARANEH") == 0)
+                        {
+                            sumYARANEH += amount;
+                        }
+                            else if(strcmp(tempIncome->source, "Pocket Money") == 0)
+                            {
+                                sumPocketMoney += amount;
+                            }
+                                else if(strcmp(tempIncome->source, "University Grant") == 0)
+                                {
+                                    sumUniversityGrant += amount;
+                                }
+                }
+            }
+            tempIncome = tempIncome->link;
+        }
+        float ratioProgrammingSalary, ratioYARANEH, ratioPocketMoney, ratioUniversityGrant;
+        ratioProgrammingSalary = ((float)sumProgrammingSlary / sumIncomes) * 100;
+        ratioYARANEH = ((float)sumYARANEH / sumIncomes) * 100;
+        ratioPocketMoney = ((float)sumPocketMoney / sumIncomes) * 100;
+        ratioUniversityGrant = ((float)sumUniversityGrant / sumIncomes) * 100;
+        setTextColor(AQUA);
+        printf("\n>> ");
+        setTextColor(WHITE);
+        printf("The ratio of different incomes to each other between %s/%s/%s and %s/%s/%s: ", beginningYear, beginningMonth, beginningDay, endYear, endMonth, endDay);
+        setTextColor(AQUA);
+        printf("\n\n> ");
+        setTextColor(WHITE);
+        printf("Programming Salary = %.2f%%", ratioProgrammingSalary);
+        setTextColor(AQUA);
+        printf("\n> ");
+        setTextColor(WHITE);
+        printf("YARANEH = %.2f%%", ratioYARANEH);
+        setTextColor(AQUA);
+        printf("\n> ");
+        setTextColor(WHITE);
+        printf("Pocket Money = %.2f%%", ratioPocketMoney);
+        setTextColor(AQUA);
+        printf("\n> ");
+        setTextColor(WHITE);
+        printf("University Grant = %.2f%%\n\n", ratioUniversityGrant);
+        printf("--------------------------------------------------\n\n");
+        tempIncome = endIncome = startIncome;
+        while(tempIncome != NULL)
+        {
+            endIncome = tempIncome->link;
+            free(tempIncome);
+            tempIncome = endIncome;
+        }
+        printf("1. Incomes Statistics Menu\n2. EXIT\n\n");
+        printf(">>Please Enter Your Choice: ");
+        choice = getchar();
+        fflush(stdin);
+        while(choice != '1' && choice != '2')
+        {
+            setTextColor(RED);
+            printf("\nERROR: The number entered is invalid! Try again!\n\n");
+            setTextColor(WHITE);
+            printf(">>Please Enter Your Choice: ");
+            choice = getchar();
+            fflush(stdin);
+        }
+        if(choice == '1')
+        {
+            incomesStatisticsMenu();
+        }
+        else
+        {
+            exit(0);
+        }
+    }
+    else
+    {
+        tempIncome = endIncome = startIncome;
+        while(tempIncome != NULL)
+        {
+            endIncome = tempIncome->link;
+            free(tempIncome);
+            tempIncome = endIncome;
+        }
+        setTextColor(RED);
+        printf("\nERROR: No income was recorded between %s/%s/%s and %s/%s/%s!\n\n", beginningYear, beginningMonth, beginningDay, endYear, endMonth, endDay);
+        setTextColor(WHITE);
+        printf("1. Try again!\n2. EXIT\n\n0. Incomes Statistics Menu\n\n");
+        printf(">>Please Enter Your Choice: ");
+        choice = getchar();
+        fflush(stdin);
+        while(choice != '1' && choice != '2' && choice != '0')
+        {
+            setTextColor(RED);
+            printf("\nERROR: The number entered is invalid! Try again!\n\n");
+            setTextColor(WHITE);
+            printf(">>Please Enter Your Choice: ");
+            choice = getchar();
+            fflush(stdin);
+        }
+        if(choice == '1')
+        {
+            ratioIncomesInterval();
+        }
+        else if(choice == '0')
+        {
+            incomesStatisticsMenu();
+        }
+            else
+            {
+                exit(0);
+            }
+    }
+}
+
+//This function displays the details of incomes in a history interval and goes to the next step based on the user's choice
+void detailsIncomesInterval(void)
+{
+    int beginningYearInt, beginningMonthInt, beginningDayInt, endYearInt, endMonthInt, endDayInt, yearInt, monthInt, dayInt, correct=0, ok=0, exist=0;
+    char beginningYear[5], beginningMonth[3], beginningDay[3], endYear[5], endMonth[3], endDay[3], choice;
+    system("cls");
+    printf("--------------- Incomes Statistics ---------------\n\n");
+    printf("Please enter the beginning of the interval(YYYY/MM/DD): ");
+    scanf("%4s/%2s/%2s", beginningYear, beginningMonth, beginningDay);
+    fflush(stdin);
+    printf("Please enter the end of the interval(YYYY/MM/DD): ");
+    scanf("%4s/%2s/%2s", endYear, endMonth, endDay);
+    fflush(stdin);
+    beginningYearInt = atoi(beginningYear);
+    beginningMonthInt = atoi(beginningMonth);
+    beginningDayInt = atoi(beginningDay);
+    endYearInt = atoi(endYear);
+    endMonthInt = atoi(endMonth);
+    endDayInt = atoi(endDay);
+    if(beginningYearInt == endYearInt)
+    {
+        if(beginningMonthInt == endMonthInt)
+        {
+            if(beginningDayInt <= endDayInt)
+            {
+                correct = 1;
+            }
+        }
+        else if(beginningMonthInt < endMonthInt)
+        {
+            correct = 1;
+        }
+    }
+    else if(beginningYearInt < endYearInt)
+    {
+        correct = 1;
+    }
+    while(correct == 0)
+    {
+        system("cls");
+        printf("--------------- Incomes Statistics ---------------\n\n");
+        setTextColor(RED);
+        printf("ERROR: The beginning date of the interval must be before the end date of the interval!\n\n");
+        setTextColor(WHITE);
+        printf("Please enter the beginning of the interval(YYYY/MM/DD): ");
+        scanf("%4s/%2s/%2s", beginningYear, beginningMonth, beginningDay);
+        fflush(stdin);
+        printf("Please enter the end of the interval(YYYY/MM/DD): ");
+        scanf("%4s/%2s/%2s", endYear, endMonth, endDay);
+        fflush(stdin);
+        beginningYearInt = atoi(beginningYear);
+        beginningMonthInt = atoi(beginningMonth);
+        beginningDayInt = atoi(beginningDay);
+        endYearInt = atoi(endYear);
+        endMonthInt = atoi(endMonth);
+        endDayInt = atoi(endDay);
+        if(beginningYearInt == endYearInt)
+        {
+            if(beginningMonthInt == endMonthInt)
+            {
+                if(beginningDayInt <= endDayInt)
+                {
+                    correct = 1;
+                }
+            }
+            else if(beginningMonthInt < endMonthInt)
+            {
+                correct = 1;
+            }
+        }
+        else if(beginningYearInt < endYearInt)
+        {
+            correct = 1;
+        }
+    }
+    char incomesFileName[80] = "Incomes_";
+    strcat(incomesFileName, Name);
+    strcat(incomesFileName, LastName);
+    strcat(incomesFileName, ".txt");
+    struct income *startIncome, *endIncome, *tempIncome;
+    FILE *f;
+    f = fopen(incomesFileName, "r");
+    if(f != NULL)
+    {
+        tempIncome = malloc(sizeof(struct income));
+        tempIncome->link = NULL;
+        fread(tempIncome, sizeof(struct income), 1, f);
+        startIncome = endIncome = tempIncome;
+        while(feof(f) == 0)
+        {
+            tempIncome = malloc(sizeof(struct income));
+            tempIncome->link = NULL;
+            fread(tempIncome, sizeof(struct income), 1, f);
+            endIncome->link = tempIncome;
+            endIncome = tempIncome;
+        }
+        fclose(f);
+    }
+    else
+    {
+        printf("File could not be opened!");
+        exit(0);
+    }
+    tempIncome = startIncome;
+    while(tempIncome != NULL)
+    {
+        ok = 0;
+        yearInt = atoi(tempIncome->date.year);
+        monthInt = atoi(tempIncome->date.month);
+        dayInt = atoi(tempIncome->date.day);
+        if(beginningYearInt == yearInt)
+        {
+            if(beginningMonthInt == monthInt)
+            {
+                if(beginningDayInt <= dayInt)
+                {
+                    ok = 1;
+                }
+            }
+            else if(beginningMonthInt < monthInt)
+            {
+                ok = 1;
+            }
+        }
+        else if(beginningYearInt < yearInt)
+        {
+            ok = 1;
+        }
+        if(ok == 1)
+        {
+            if(endYearInt == yearInt)
+            {
+                if(endMonthInt == monthInt)
+                {
+                    if(endDayInt >= dayInt)
+                    {
+                        exist = 1;
+                        ok = 0;
+                        break;
+                    }
+                }
+                else if(endMonthInt > monthInt)
+                {
+                    exist = 1;
+                    ok = 0;
+                    break;
+                }
+            }
+            else if(endYearInt > yearInt)
+            {
+                exist = 1;
+                ok = 0;
+                break;
+            }
+        }
+        tempIncome = tempIncome->link;
+    }
+    if(exist == 1)
+    {
+        setTextColor(AQUA);
+        printf("\n Amount      | Source             | Date       | Description\n");
+        setTextColor(WHITE);
+        tempIncome = startIncome;
+        while(tempIncome != NULL)
+        {
+            ok = 0;
+            yearInt = atoi(tempIncome->date.year);
+            monthInt = atoi(tempIncome->date.month);
+            dayInt = atoi(tempIncome->date.day);
+            if(beginningYearInt == yearInt)
+            {
+                if(beginningMonthInt == monthInt)
+                {
+                    if(beginningDayInt <= dayInt)
+                    {
+                        ok = 1;
+                    }
+                }
+                else if(beginningMonthInt < monthInt)
+                {
+                    ok = 1;
+                }
+            }
+            else if(beginningYearInt < yearInt)
+            {
+                ok = 1;
+            }
+            if(ok == 1)
+            {
+                if(endYearInt == yearInt)
+                {
+                    if(endMonthInt == monthInt)
+                    {
+                        if(endDayInt >= dayInt)
+                        {
+                            printf(" %-12s", tempIncome->amount);
+                            setTextColor(AQUA);
+                            printf("|");
+                            setTextColor(WHITE);
+                            printf(" %-19s", tempIncome->source);
+                            setTextColor(AQUA);
+                            printf("|");
+                            setTextColor(WHITE);
+                            printf(" %s/%s/%s ", tempIncome->date.year, tempIncome->date.month, tempIncome->date.day);
+                            setTextColor(AQUA);
+                            printf("|");
+                            setTextColor(WHITE);
+                            printf(" %s\n", tempIncome->description);
+                        }
+                    }
+                    else if(endMonthInt > monthInt)
+                    {
+                        printf(" %-12s", tempIncome->amount);
+                        setTextColor(AQUA);
+                        printf("|");
+                        setTextColor(WHITE);
+                        printf(" %-19s", tempIncome->source);
+                        setTextColor(AQUA);
+                        printf("|");
+                        setTextColor(WHITE);
+                        printf(" %s/%s/%s ", tempIncome->date.year, tempIncome->date.month, tempIncome->date.day);
+                        setTextColor(AQUA);
+                        printf("|");
+                        setTextColor(WHITE);
+                        printf(" %s\n", tempIncome->description);
+                    }
+                }
+                else if(endYearInt > yearInt)
+                {
+                    printf(" %-12s", tempIncome->amount);
+                    setTextColor(AQUA);
+                    printf("|");
+                    setTextColor(WHITE);
+                    printf(" %-19s", tempIncome->source);
+                    setTextColor(AQUA);
+                    printf("|");
+                    setTextColor(WHITE);
+                    printf(" %s/%s/%s ", tempIncome->date.year, tempIncome->date.month, tempIncome->date.day);
+                    setTextColor(AQUA);
+                    printf("|");
+                    setTextColor(WHITE);
+                    printf(" %s\n", tempIncome->description);
+                }
+            }
+            tempIncome = tempIncome->link;
+        }
+        printf("\n--------------------------------------------------\n\n");
+        tempIncome = endIncome = startIncome;
+        while(tempIncome != NULL)
+        {
+            endIncome = tempIncome->link;
+            free(tempIncome);
+            tempIncome = endIncome;
+        }
+        printf("1. Incomes Statistics Menu\n2. EXIT\n\n");
+        printf(">>Please Enter Your Choice: ");
+        choice = getchar();
+        fflush(stdin);
+        while(choice != '1' && choice != '2')
+        {
+            setTextColor(RED);
+            printf("\nERROR: The number entered is invalid! Try again!\n\n");
+            setTextColor(WHITE);
+            printf(">>Please Enter Your Choice: ");
+            choice = getchar();
+            fflush(stdin);
+        }
+        if(choice == '1')
+        {
+            incomesStatisticsMenu();
+        }
+        else
+        {
+            exit(0);
+        }
+    }
+    else
+    {
+        tempIncome = endIncome = startIncome;
+        while(tempIncome != NULL)
+        {
+            endIncome = tempIncome->link;
+            free(tempIncome);
+            tempIncome = endIncome;
+        }
+        setTextColor(RED);
+        printf("\nERROR: No income was recorded between %s/%s/%s and %s/%s/%s!\n\n", beginningYear, beginningMonth, beginningDay, endYear, endMonth, endDay);
+        setTextColor(WHITE);
+        printf("1. Try again!\n2. EXIT\n\n0. Incomes Statistics Menu\n\n");
+        printf(">>Please Enter Your Choice: ");
+        choice = getchar();
+        fflush(stdin);
+        while(choice != '1' && choice != '2' && choice != '0')
+        {
+            setTextColor(RED);
+            printf("\nERROR: The number entered is invalid! Try again!\n\n");
+            setTextColor(WHITE);
+            printf(">>Please Enter Your Choice: ");
+            choice = getchar();
+            fflush(stdin);
+        }
+        if(choice == '1')
+        {
+            detailsIncomesInterval();
+        }
+        else if(choice == '0')
+        {
+            incomesStatisticsMenu();
+        }
+            else
+            {
+                exit(0);
+            }
+    }
+}
+
+//This function displays the most income in a history interval and goes to the next step based on the user's choice
+void mostIncomeInterval(void)
+{
+    int beginningYearInt, beginningMonthInt, beginningDayInt, endYearInt, endMonthInt, endDayInt, yearInt, monthInt, dayInt, correct=0, ok=0, exist=0, mostIncome=0, amount;
+    char beginningYear[5], beginningMonth[3], beginningDay[3], endYear[5], endMonth[3], endDay[3], choice;
+    system("cls");
+    printf("--------------- Incomes Statistics ---------------\n\n");
+    printf("Please enter the beginning of the interval(YYYY/MM/DD): ");
+    scanf("%4s/%2s/%2s", beginningYear, beginningMonth, beginningDay);
+    fflush(stdin);
+    printf("Please enter the end of the interval(YYYY/MM/DD): ");
+    scanf("%4s/%2s/%2s", endYear, endMonth, endDay);
+    fflush(stdin);
+    beginningYearInt = atoi(beginningYear);
+    beginningMonthInt = atoi(beginningMonth);
+    beginningDayInt = atoi(beginningDay);
+    endYearInt = atoi(endYear);
+    endMonthInt = atoi(endMonth);
+    endDayInt = atoi(endDay);
+    if(beginningYearInt == endYearInt)
+    {
+        if(beginningMonthInt == endMonthInt)
+        {
+            if(beginningDayInt <= endDayInt)
+            {
+                correct = 1;
+            }
+        }
+        else if(beginningMonthInt < endMonthInt)
+        {
+            correct = 1;
+        }
+    }
+    else if(beginningYearInt < endYearInt)
+    {
+        correct = 1;
+    }
+    while(correct == 0)
+    {
+        system("cls");
+        printf("--------------- Incomes Statistics ---------------\n\n");
+        setTextColor(RED);
+        printf("ERROR: The beginning date of the interval must be before the end date of the interval!\n\n");
+        setTextColor(WHITE);
+        printf("Please enter the beginning of the interval(YYYY/MM/DD): ");
+        scanf("%4s/%2s/%2s", beginningYear, beginningMonth, beginningDay);
+        fflush(stdin);
+        printf("Please enter the end of the interval(YYYY/MM/DD): ");
+        scanf("%4s/%2s/%2s", endYear, endMonth, endDay);
+        fflush(stdin);
+        beginningYearInt = atoi(beginningYear);
+        beginningMonthInt = atoi(beginningMonth);
+        beginningDayInt = atoi(beginningDay);
+        endYearInt = atoi(endYear);
+        endMonthInt = atoi(endMonth);
+        endDayInt = atoi(endDay);
+        if(beginningYearInt == endYearInt)
+        {
+            if(beginningMonthInt == endMonthInt)
+            {
+                if(beginningDayInt <= endDayInt)
+                {
+                    correct = 1;
+                }
+            }
+            else if(beginningMonthInt < endMonthInt)
+            {
+                correct = 1;
+            }
+        }
+        else if(beginningYearInt < endYearInt)
+        {
+            correct = 1;
+        }
+    }
+    char incomesFileName[80] = "Incomes_";
+    strcat(incomesFileName, Name);
+    strcat(incomesFileName, LastName);
+    strcat(incomesFileName, ".txt");
+    struct income *startIncome, *endIncome, *tempIncome;
+    FILE *f;
+    f = fopen(incomesFileName, "r");
+    if(f != NULL)
+    {
+        tempIncome = malloc(sizeof(struct income));
+        tempIncome->link = NULL;
+        fread(tempIncome, sizeof(struct income), 1, f);
+        startIncome = endIncome = tempIncome;
+        while(feof(f) == 0)
+        {
+            tempIncome = malloc(sizeof(struct income));
+            tempIncome->link = NULL;
+            fread(tempIncome, sizeof(struct income), 1, f);
+            endIncome->link = tempIncome;
+            endIncome = tempIncome;
+        }
+        fclose(f);
+    }
+    else
+    {
+        printf("File could not be opened!");
+        exit(0);
+    }
+    tempIncome = startIncome;
+    while(tempIncome != NULL)
+    {
+        ok = 0;
+        yearInt = atoi(tempIncome->date.year);
+        monthInt = atoi(tempIncome->date.month);
+        dayInt = atoi(tempIncome->date.day);
+        if(beginningYearInt == yearInt)
+        {
+            if(beginningMonthInt == monthInt)
+            {
+                if(beginningDayInt <= dayInt)
+                {
+                    ok = 1;
+                }
+            }
+            else if(beginningMonthInt < monthInt)
+            {
+                ok = 1;
+            }
+        }
+        else if(beginningYearInt < yearInt)
+        {
+            ok = 1;
+        }
+        if(ok == 1)
+        {
+            if(endYearInt == yearInt)
+            {
+                if(endMonthInt == monthInt)
+                {
+                    if(endDayInt >= dayInt)
+                    {
+                        exist = 1;
+                        ok = 0;
+                        break;
+                    }
+                }
+                else if(endMonthInt > monthInt)
+                {
+                    exist = 1;
+                    ok = 0;
+                    break;
+                }
+            }
+            else if(endYearInt > yearInt)
+            {
+                exist = 1;
+                ok = 0;
+                break;
+            }
+        }
+        tempIncome = tempIncome->link;
+    }
+    if(exist == 1)
+    {
+        tempIncome = startIncome;
+        while(tempIncome != NULL)
+        {
+            ok = 0;
+            yearInt = atoi(tempIncome->date.year);
+            monthInt = atoi(tempIncome->date.month);
+            dayInt = atoi(tempIncome->date.day);
+            if(beginningYearInt == yearInt)
+            {
+                if(beginningMonthInt == monthInt)
+                {
+                    if(beginningDayInt <= dayInt)
+                    {
+                        ok = 1;
+                    }
+                }
+                else if(beginningMonthInt < monthInt)
+                {
+                    ok = 1;
+                }
+            }
+            else if(beginningYearInt < yearInt)
+            {
+                ok = 1;
+            }
+            if(ok == 1)
+            {
+                if(endYearInt == yearInt)
+                {
+                    if(endMonthInt == monthInt)
+                    {
+                        if(endDayInt >= dayInt)
+                        {
+                            amount = atoi(tempIncome->amount);
+                            if(amount >= mostIncome)
+                            {
+                                mostIncome = amount;
+                            }
+                        }
+                    }
+                    else if(endMonthInt > monthInt)
+                    {
+                        amount = atoi(tempIncome->amount);
+                        if(amount >= mostIncome)
+                        {
+                            mostIncome = amount;
+                        }
+                    }
+                }
+                else if(endYearInt > yearInt)
+                {
+                    amount = atoi(tempIncome->amount);
+                    if(amount >= mostIncome)
+                    {
+                        mostIncome = amount;
+                    }
+                }
+            }
+            tempIncome = tempIncome->link;
+        }
+        setTextColor(AQUA);
+        printf("\n>> ");
+        setTextColor(WHITE);
+        printf("The most income between %s/%s/%s and %s/%s/%s: ", beginningYear, beginningMonth, beginningDay, endYear, endMonth, endDay);
+        printf("%d Rials\n\n", mostIncome);
+        printf("--------------------------------------------------\n\n");
+        tempIncome = endIncome = startIncome;
+        while(tempIncome != NULL)
+        {
+            endIncome = tempIncome->link;
+            free(tempIncome);
+            tempIncome = endIncome;
+        }
+        printf("1. Incomes Statistics Menu\n2. EXIT\n\n");
+        printf(">>Please Enter Your Choice: ");
+        choice = getchar();
+        fflush(stdin);
+        while(choice != '1' && choice != '2')
+        {
+            setTextColor(RED);
+            printf("\nERROR: The number entered is invalid! Try again!\n\n");
+            setTextColor(WHITE);
+            printf(">>Please Enter Your Choice: ");
+            choice = getchar();
+            fflush(stdin);
+        }
+        if(choice == '1')
+        {
+            incomesStatisticsMenu();
+        }
+        else
+        {
+            exit(0);
+        }
+    }
+    else
+    {
+        tempIncome = endIncome = startIncome;
+        while(tempIncome != NULL)
+        {
+            endIncome = tempIncome->link;
+            free(tempIncome);
+            tempIncome = endIncome;
+        }
+        setTextColor(RED);
+        printf("\nERROR: No income was recorded between %s/%s/%s and %s/%s/%s!\n\n", beginningYear, beginningMonth, beginningDay, endYear, endMonth, endDay);
+        setTextColor(WHITE);
+        printf("1. Try again!\n2. EXIT\n\n0. Incomes Statistics Menu\n\n");
+        printf(">>Please Enter Your Choice: ");
+        choice = getchar();
+        fflush(stdin);
+        while(choice != '1' && choice != '2' && choice != '0')
+        {
+            setTextColor(RED);
+            printf("\nERROR: The number entered is invalid! Try again!\n\n");
+            setTextColor(WHITE);
+            printf(">>Please Enter Your Choice: ");
+            choice = getchar();
+            fflush(stdin);
+        }
+        if(choice == '1')
+        {
+            mostIncomeInterval();
+        }
+        else if(choice == '0')
+        {
+            incomesStatisticsMenu();
+        }
+            else
+            {
+                exit(0);
+            }
+    }
+}
+
+//This function displays incomes that have the user desired word in their description field and goes to the next step based on the user's choice
+void wordSearchIncomesDescription(void)
+{
+    int exist=0, i=0, j=0, k=0, a=0, b=0, choice;
+    char description[100], descriptionWords[50][30], word[30], userWord[30], ch;
+    system("cls");
+    printf("--------------- Incomes Statistics ---------------\n\n");
+    printf("Please enter a search term: ");
+    scanf("%s", userWord);
+    fflush(stdin);
+    strcpy(word, userWord);
+    strlwr(word);
+    char incomesFileName[80] = "Incomes_";
+    strcat(incomesFileName, Name);
+    strcat(incomesFileName, LastName);
+    strcat(incomesFileName, ".txt");
+    struct income *startIncome, *endIncome, *tempIncome;
+    FILE *f;
+    f = fopen(incomesFileName, "r");
+    if(f != NULL)
+    {
+        tempIncome = malloc(sizeof(struct income));
+        tempIncome->link = NULL;
+        fread(tempIncome, sizeof(struct income), 1, f);
+        startIncome = endIncome = tempIncome;
+        while(feof(f) == 0)
+        {
+            tempIncome = malloc(sizeof(struct income));
+            tempIncome->link = NULL;
+            fread(tempIncome, sizeof(struct income), 1, f);
+            endIncome->link = tempIncome;
+            endIncome = tempIncome;
+        }
+        fclose(f);
+    }
+    else
+    {
+        printf("File could not be opened!");
+        exit(0);
+    }
+    tempIncome = startIncome;
+    while(tempIncome != NULL)
+    {
+        strcpy(description, tempIncome->description);
+        ch = description[i];
+        i++;
+        while(ch != '\r')
+        {
+            ch = tolower(ch);
+            descriptionWords[j][k] = ch;
+            k++;
+            ch = description[i];
+            i++;
+            while(ch != ' ' && ch != '\r')
+            {
+                ch = tolower(ch);
+                descriptionWords[j][k] = ch;
+                k++;
+                ch = description[i];
+                i++;
+            }
+            descriptionWords[j][k] = '\0';
+            if(ch == ' ')
+            {
+                k=0;
+                j++;
+                ch = description[i];
+                i++;
+            }
+        }
+        for(i=0; i<50; i++)
+        {
+            if(strcmp(word, descriptionWords[i]) == 0)
+            {
+                exist = 1;
+                break;
+            }
+        }
+        i=0;
+        j=0;
+        k=0;
+        tempIncome = tempIncome->link;
+    }
+    if(exist == 1)
+    {
+        setTextColor(AQUA);
+        printf("\n Amount      | Source             | Date       | Description\n");
+        setTextColor(WHITE);
+        tempIncome = startIncome;
+        while(tempIncome != NULL)
+        {
+            strcpy(description, tempIncome->description);
+            ch = description[i];
+            i++;
+            while(ch != '\r')
+            {
+                ch = tolower(ch);
+                descriptionWords[j][k] = ch;
+                k++;
+                ch = description[i];
+                i++;
+                while(ch != ' ' && ch != '\r')
+                {
+                    ch = tolower(ch);
+                    descriptionWords[j][k] = ch;
+                    k++;
+                    ch = description[i];
+                    i++;
+                }
+                descriptionWords[j][k] = '\0';
+                if(ch == ' ')
+                {
+                    k=0;
+                    j++;
+                    ch = description[i];
+                    i++;
+                }
+            }
+            /*for(i=0; i<50; i++)
+            {
+                if(strcmp(word, descriptionWords[i]) == 0)
+                {
+                    printf(" %-12s", tempIncome->amount);
+                    setTextColor(AQUA);
+                    printf("|");
+                    setTextColor(WHITE);
+                    printf(" %-19s", tempIncome->source);
+                    setTextColor(AQUA);
+                    printf("|");
+                    setTextColor(WHITE);
+                    printf(" %s/%s/%s ", tempIncome->date.year, tempIncome->date.month, tempIncome->date.day);
+                    setTextColor(AQUA);
+                    printf("|");
+                    setTextColor(WHITE);
+                    printf(" %s\n", tempIncome->description);
+                    break;
+                }
+            }*/
+            for(i=0; i<10; i++)
+            {
+                printf("%s,", descriptionWords[i]);
+            }
+            printf("\n");
+            i=0;
+            j=0;
+            k=0;
+            tempIncome = tempIncome->link;
+        }
+        printf("\n--------------------------------------------------\n\n");
+        tempIncome = endIncome = startIncome;
+        while(tempIncome != NULL)
+        {
+            endIncome = tempIncome->link;
+            free(tempIncome);
+            tempIncome = endIncome;
+        }
+        printf("1. Incomes Statistics Menu\n2. EXIT\n\n");
+        printf(">>Please Enter Your Choice: ");
+        choice = getchar();
+        fflush(stdin);
+        while(choice != '1' && choice != '2')
+        {
+            setTextColor(RED);
+            printf("\nERROR: The number entered is invalid! Try again!\n\n");
+            setTextColor(WHITE);
+            printf(">>Please Enter Your Choice: ");
+            choice = getchar();
+            fflush(stdin);
+        }
+        if(choice == '1')
+        {
+            incomesStatisticsMenu();
+        }
+        else
+        {
+            exit(0);
+        }
+    }
+    else
+    {
+        tempIncome = endIncome = startIncome;
+        while(tempIncome != NULL)
+        {
+            endIncome = tempIncome->link;
+            free(tempIncome);
+            tempIncome = endIncome;
+        }
+        setTextColor(RED);
+        printf("\nERROR: The word \"%s\" was not found!\n\n", userWord);
+        setTextColor(WHITE);
+        printf("1. Try again!\n2. EXIT\n\n0. Incomes Statistics Menu\n\n");
+        printf(">>Please Enter Your Choice: ");
+        choice = getchar();
+        fflush(stdin);
+        while(choice != '1' && choice != '2' && choice != '0')
+        {
+            setTextColor(RED);
+            printf("\nERROR: The number entered is invalid! Try again!\n\n");
+            setTextColor(WHITE);
+            printf(">>Please Enter Your Choice: ");
+            choice = getchar();
+            fflush(stdin);
+        }
+        if(choice == '1')
+        {
+            wordSearchIncomesDescription();
+        }
+        else if(choice == '0')
+        {
+            incomesStatisticsMenu();
+        }
+            else
+            {
+                exit(0);
+            }
+    }
+}
+
 //This function displays the expense statistics menu and goes to the next step based on the user's choice
 void expensesStatisticsMenu(void)
 {
@@ -1511,7 +3250,7 @@ void expensesStatisticsMenu(void)
     system("cls");
     printf("--------------- Expenses Statistics Menu ---------------\n\n");
     printf("1. The total expenses of a certain year\n2. The total expenses in a history interval\n3. The total of a certain type of expense in a history interval\n");
-    printf("4. The ratio of different expenses to each other\n5. The details of expenses in a history interval\n6. The most expense in a history interval\n");
+    printf("4. The ratio of different expenses to each other in a history interval\n5. The details of expenses in a history interval\n6. The most expense in a history interval\n");
     printf("7. Search in the expenses description field\n\n0. Statistics Menu\n\n");
     printf(">>Please Enter Your Choice: ");
     choice = getchar();
@@ -1535,19 +3274,19 @@ void expensesStatisticsMenu(void)
     }
         else if(choice == '3')
         {
-            printf("Go to the total of a certain type of expense in a history interval");
+            totalCertainExpenseInterval();
         }
             else if(choice == '4')
             {
-                printf("Go to the ratio of different expenses to each other");
+                ratioExpensesInterval();
             }
                 else if(choice == '5')
                 {
-                    printf("Go to the details of expenses in a history interval");
+                    detailsExpensesInterval();
                 }
                     else if(choice == '6')
                     {
-                        printf("Go to the most expense in a history interval");
+                        mostExpenseInterval();
                     }
                         else if(choice == '7')
                         {
@@ -1977,7 +3716,7 @@ void totalExpensesInterval(void)
         }
         if(choice == '1')
         {
-            totalIncomesInterval();
+            totalExpensesInterval();
         }
         else if(choice == '0')
         {
@@ -1988,4 +3727,1720 @@ void totalExpensesInterval(void)
                 exit(0);
             }
     }
+}
+
+//This function displays the total of a certain type of expense of a history interval and goes to the next step based on the user's choice
+void totalCertainExpenseInterval(void)
+{
+    int beginningYearInt, beginningMonthInt, beginningDayInt, endYearInt, endMonthInt, endDayInt, yearInt, monthInt, dayInt, correct=0, ok=0, exist=0, sumExpenses=0, amount;
+    char beginningYear[5], beginningMonth[3], beginningDay[3], endYear[5], endMonth[3], endDay[3], expenseType[25], choice;
+    system("cls");
+    printf("--------------- Expenses Statistics ---------------\n\n");
+    printf("Please enter the beginning of the interval(YYYY/MM/DD): ");
+    scanf("%4s/%2s/%2s", beginningYear, beginningMonth, beginningDay);
+    fflush(stdin);
+    printf("Please enter the end of the interval(YYYY/MM/DD): ");
+    scanf("%4s/%2s/%2s", endYear, endMonth, endDay);
+    fflush(stdin);
+    beginningYearInt = atoi(beginningYear);
+    beginningMonthInt = atoi(beginningMonth);
+    beginningDayInt = atoi(beginningDay);
+    endYearInt = atoi(endYear);
+    endMonthInt = atoi(endMonth);
+    endDayInt = atoi(endDay);
+    if(beginningYearInt == endYearInt)
+    {
+        if(beginningMonthInt == endMonthInt)
+        {
+            if(beginningDayInt <= endDayInt)
+            {
+                correct = 1;
+            }
+        }
+        else if(beginningMonthInt < endMonthInt)
+        {
+            correct = 1;
+        }
+    }
+    else if(beginningYearInt < endYearInt)
+    {
+        correct = 1;
+    }
+    while(correct == 0)
+    {
+        system("cls");
+        printf("--------------- Expenses Statistics ---------------\n\n");
+        setTextColor(RED);
+        printf("ERROR: The beginning date of the interval must be before the end date of the interval!\n\n");
+        setTextColor(WHITE);
+        printf("Please enter the beginning of the interval(YYYY/MM/DD): ");
+        scanf("%4s/%2s/%2s", beginningYear, beginningMonth, beginningDay);
+        fflush(stdin);
+        printf("Please enter the end of the interval(YYYY/MM/DD): ");
+        scanf("%4s/%2s/%2s", endYear, endMonth, endDay);
+        fflush(stdin);
+        beginningYearInt = atoi(beginningYear);
+        beginningMonthInt = atoi(beginningMonth);
+        beginningDayInt = atoi(beginningDay);
+        endYearInt = atoi(endYear);
+        endMonthInt = atoi(endMonth);
+        endDayInt = atoi(endDay);
+        if(beginningYearInt == endYearInt)
+        {
+            if(beginningMonthInt == endMonthInt)
+            {
+                if(beginningDayInt <= endDayInt)
+                {
+                    correct = 1;
+                }
+            }
+            else if(beginningMonthInt < endMonthInt)
+            {
+                correct = 1;
+            }
+        }
+        else if(beginningYearInt < endYearInt)
+        {
+            correct = 1;
+        }
+    }
+    printf("\nPlease specify expense type:\n\n");
+    printf("1. Clothing\n2. Transportation\n3. Tuition Fees\n4. Entertainment\n5. Mobile and Internet Bill\n6. Medical Expenses\n7. Donate to Charity\n\n");
+    printf(">>Please Enter Your Choice: ");
+    choice = getchar();
+    fflush(stdin);
+    while(choice != '1' && choice != '2' && choice != '3' && choice != '4' && choice != '5' && choice != '6' && choice != '7')
+    {
+        printf("\nPlease specify expense type:\n\n");
+        printf("1. Clothing\n2. Transportation\n3. Tuition Fees\n4. Entertainment\n5. Mobile and Internet Bill\n6. Medical Expenses\n7. Donate to Charity\n\n");
+        setTextColor(RED);
+        printf("ERROR: The number entered is invalid! Try again!\n\n");
+        setTextColor(WHITE);
+        printf(">>Please Enter Your Choice: ");
+        choice = getchar();
+        fflush(stdin);
+    }
+    if(choice == '1')
+    {
+        strcpy(expenseType, "Clothing");
+    }
+    else if(choice == '2')
+    {
+        strcpy(expenseType, "Transportation");
+    }
+        else if(choice == '3')
+        {
+            strcpy(expenseType, "Tuition Fees");
+        }
+            else if(choice == '4')
+            {
+                strcpy(expenseType, "Entertainment");
+            }
+                else if(choice == '5')
+                {
+                    strcpy(expenseType, "Mobile and Internet Bill");
+                }
+                    else if(choice == '6')
+                    {
+                        strcpy(expenseType, "Medical Expenses");
+                    }
+                        else if(choice == '7')
+                        {
+                            strcpy(expenseType, "Donate to Charity");
+                        }
+    char expensesFileName[80] = "Expenses_";
+    strcat(expensesFileName, Name);
+    strcat(expensesFileName, LastName);
+    strcat(expensesFileName, ".txt");
+    struct expense *startExpense, *endExpense, *tempExpense;
+    FILE *f;
+    f = fopen(expensesFileName, "r");
+    if(f != NULL)
+    {
+        tempExpense = malloc(sizeof(struct expense));
+        tempExpense->link = NULL;
+        fread(tempExpense, sizeof(struct expense), 1, f);
+        startExpense = endExpense = tempExpense;
+        while(feof(f) == 0)
+        {
+            tempExpense = malloc(sizeof(struct expense));
+            tempExpense->link = NULL;
+            fread(tempExpense, sizeof(struct expense), 1, f);
+            endExpense->link = tempExpense;
+            endExpense = tempExpense;
+        }
+        fclose(f);
+    }
+    else
+    {
+        printf("File could not be opened!");
+        exit(0);
+    }
+    tempExpense = startExpense;
+    while(tempExpense != NULL)
+    {
+        ok = 0;
+        yearInt = atoi(tempExpense->date.year);
+        monthInt = atoi(tempExpense->date.month);
+        dayInt = atoi(tempExpense->date.day);
+        if(beginningYearInt == yearInt)
+        {
+            if(beginningMonthInt == monthInt)
+            {
+                if(beginningDayInt <= dayInt)
+                {
+                    ok = 1;
+                }
+            }
+            else if(beginningMonthInt < monthInt)
+            {
+                ok = 1;
+            }
+        }
+        else if(beginningYearInt < yearInt)
+        {
+            ok = 1;
+        }
+        if(ok == 1)
+        {
+            if(endYearInt == yearInt)
+            {
+                if(endMonthInt == monthInt)
+                {
+                    if(endDayInt >= dayInt)
+                    {
+                        if(strcmp(expenseType, tempExpense->item) == 0)
+                        {
+                            exist = 1;
+                            ok = 0;
+                            break;
+                        }
+                    }
+                }
+                else if(endMonthInt > monthInt)
+                {
+                    if(strcmp(expenseType, tempExpense->item) == 0)
+                    {
+                        exist = 1;
+                        ok = 0;
+                        break;
+                    }
+                }
+            }
+            else if(endYearInt > yearInt)
+            {
+                if(strcmp(expenseType, tempExpense->item) == 0)
+                {
+                    exist = 1;
+                    ok = 0;
+                    break;
+                }
+            }
+        }
+        tempExpense = tempExpense->link;
+    }
+    if(exist == 1)
+    {
+        tempExpense = startExpense;
+        while(tempExpense != NULL)
+        {
+            ok = 0;
+            yearInt = atoi(tempExpense->date.year);
+            monthInt = atoi(tempExpense->date.month);
+            dayInt = atoi(tempExpense->date.day);
+            if(beginningYearInt == yearInt)
+            {
+                if(beginningMonthInt == monthInt)
+                {
+                    if(beginningDayInt <= dayInt)
+                    {
+                        ok = 1;
+                    }
+                }
+                else if(beginningMonthInt < monthInt)
+                {
+                    ok = 1;
+                }
+            }
+            else if(beginningYearInt < yearInt)
+            {
+                ok = 1;
+            }
+            if(ok == 1)
+            {
+                if(endYearInt == yearInt)
+                {
+                    if(endMonthInt == monthInt)
+                    {
+                        if(endDayInt >= dayInt)
+                        {
+                            if(strcmp(expenseType, tempExpense->item) == 0)
+                            {
+                                amount = atoi(tempExpense->amount);
+                                sumExpenses += amount;
+                            }
+                        }
+                    }
+                    else if(endMonthInt > monthInt)
+                    {
+                        if(strcmp(expenseType, tempExpense->item) == 0)
+                        {
+                            amount = atoi(tempExpense->amount);
+                            sumExpenses += amount;
+                        }
+                    }
+                }
+                else if(endYearInt > yearInt)
+                {
+                    if(strcmp(expenseType, tempExpense->item) == 0)
+                    {
+                        amount = atoi(tempExpense->amount);
+                        sumExpenses += amount;
+                    }
+                }
+            }
+            tempExpense = tempExpense->link;
+        }
+        setTextColor(AQUA);
+        printf("\n>> ");
+        setTextColor(WHITE);
+        printf("Total expense from %s between %s/%s/%s and %s/%s/%s: ", expenseType, beginningYear, beginningMonth, beginningDay, endYear, endMonth, endDay);
+        printf("%d Rials\n\n", sumExpenses);
+        printf("--------------------------------------------------\n\n");
+        tempExpense = endExpense = startExpense;
+        while(tempExpense != NULL)
+        {
+            endExpense = tempExpense->link;
+            free(tempExpense);
+            tempExpense = endExpense;
+        }
+        printf("1. Expenses Statistics Menu\n2. EXIT\n\n");
+        printf(">>Please Enter Your Choice: ");
+        choice = getchar();
+        fflush(stdin);
+        while(choice != '1' && choice != '2')
+        {
+            setTextColor(RED);
+            printf("\nERROR: The number entered is invalid! Try again!\n\n");
+            setTextColor(WHITE);
+            printf(">>Please Enter Your Choice: ");
+            choice = getchar();
+            fflush(stdin);
+        }
+        if(choice == '1')
+        {
+            expensesStatisticsMenu();
+        }
+        else
+        {
+            exit(0);
+        }
+    }
+    else
+    {
+        tempExpense = endExpense = startExpense;
+        while(tempExpense != NULL)
+        {
+            endExpense = tempExpense->link;
+            free(tempExpense);
+            tempExpense = endExpense;
+        }
+        setTextColor(RED);
+        printf("\nERROR: No expense from %s was recorded between %s/%s/%s and %s/%s/%s!\n\n", expenseType, beginningYear, beginningMonth, beginningDay, endYear, endMonth, endDay);
+        setTextColor(WHITE);
+        printf("1. Try again!\n2. EXIT\n\n0. Expenses Statistics Menu\n\n");
+        printf(">>Please Enter Your Choice: ");
+        choice = getchar();
+        fflush(stdin);
+        while(choice != '1' && choice != '2' && choice != '0')
+        {
+            setTextColor(RED);
+            printf("\nERROR: The number entered is invalid! Try again!\n\n");
+            setTextColor(WHITE);
+            printf(">>Please Enter Your Choice: ");
+            choice = getchar();
+            fflush(stdin);
+        }
+        if(choice == '1')
+        {
+            totalCertainExpenseInterval();
+        }
+        else if(choice == '0')
+        {
+            expensesStatisticsMenu();
+        }
+            else
+            {
+                exit(0);
+            }
+    }
+}
+
+//This function displays the ratio of different expenses to each other in a history interval and goes to the next step based on the user's choice
+void ratioExpensesInterval(void)
+{
+    int beginningYearInt, beginningMonthInt, beginningDayInt, endYearInt, endMonthInt, endDayInt, yearInt, monthInt, dayInt, correct=0, ok=0, exist=0;
+    int sumExpenses=0, sumClothing=0, sumTransportation=0, sumTuitionFees=0, sumEntertainment=0, sumMobileAndInternetBill=0, sumMedicalExpenses=0, sumDonateToCharity=0, amount;
+    char beginningYear[5], beginningMonth[3], beginningDay[3], endYear[5], endMonth[3], endDay[3], choice;
+    system("cls");
+    printf("--------------- Expenses Statistics ---------------\n\n");
+    printf("Please enter the beginning of the interval(YYYY/MM/DD): ");
+    scanf("%4s/%2s/%2s", beginningYear, beginningMonth, beginningDay);
+    fflush(stdin);
+    printf("Please enter the end of the interval(YYYY/MM/DD): ");
+    scanf("%4s/%2s/%2s", endYear, endMonth, endDay);
+    fflush(stdin);
+    beginningYearInt = atoi(beginningYear);
+    beginningMonthInt = atoi(beginningMonth);
+    beginningDayInt = atoi(beginningDay);
+    endYearInt = atoi(endYear);
+    endMonthInt = atoi(endMonth);
+    endDayInt = atoi(endDay);
+    if(beginningYearInt == endYearInt)
+    {
+        if(beginningMonthInt == endMonthInt)
+        {
+            if(beginningDayInt <= endDayInt)
+            {
+                correct = 1;
+            }
+        }
+        else if(beginningMonthInt < endMonthInt)
+        {
+            correct = 1;
+        }
+    }
+    else if(beginningYearInt < endYearInt)
+    {
+        correct = 1;
+    }
+    while(correct == 0)
+    {
+        system("cls");
+        printf("--------------- Expenses Statistics ---------------\n\n");
+        setTextColor(RED);
+        printf("ERROR: The beginning date of the interval must be before the end date of the interval!\n\n");
+        setTextColor(WHITE);
+        printf("Please enter the beginning of the interval(YYYY/MM/DD): ");
+        scanf("%4s/%2s/%2s", beginningYear, beginningMonth, beginningDay);
+        fflush(stdin);
+        printf("Please enter the end of the interval(YYYY/MM/DD): ");
+        scanf("%4s/%2s/%2s", endYear, endMonth, endDay);
+        fflush(stdin);
+        beginningYearInt = atoi(beginningYear);
+        beginningMonthInt = atoi(beginningMonth);
+        beginningDayInt = atoi(beginningDay);
+        endYearInt = atoi(endYear);
+        endMonthInt = atoi(endMonth);
+        endDayInt = atoi(endDay);
+        if(beginningYearInt == endYearInt)
+        {
+            if(beginningMonthInt == endMonthInt)
+            {
+                if(beginningDayInt <= endDayInt)
+                {
+                    correct = 1;
+                }
+            }
+            else if(beginningMonthInt < endMonthInt)
+            {
+                correct = 1;
+            }
+        }
+        else if(beginningYearInt < endYearInt)
+        {
+            correct = 1;
+        }
+    }
+    char expensesFileName[80] = "Expenses_";
+    strcat(expensesFileName, Name);
+    strcat(expensesFileName, LastName);
+    strcat(expensesFileName, ".txt");
+    struct expense *startExpense, *endExpense, *tempExpense;
+    FILE *f;
+    f = fopen(expensesFileName, "r");
+    if(f != NULL)
+    {
+        tempExpense = malloc(sizeof(struct expense));
+        tempExpense->link = NULL;
+        fread(tempExpense, sizeof(struct expense), 1, f);
+        startExpense = endExpense = tempExpense;
+        while(feof(f) == 0)
+        {
+            tempExpense = malloc(sizeof(struct expense));
+            tempExpense->link = NULL;
+            fread(tempExpense, sizeof(struct expense), 1, f);
+            endExpense->link = tempExpense;
+            endExpense = tempExpense;
+        }
+        fclose(f);
+    }
+    else
+    {
+        printf("File could not be opened!");
+        exit(0);
+    }
+    tempExpense = startExpense;
+    while(tempExpense != NULL)
+    {
+        ok = 0;
+        yearInt = atoi(tempExpense->date.year);
+        monthInt = atoi(tempExpense->date.month);
+        dayInt = atoi(tempExpense->date.day);
+        if(beginningYearInt == yearInt)
+        {
+            if(beginningMonthInt == monthInt)
+            {
+                if(beginningDayInt <= dayInt)
+                {
+                    ok = 1;
+                }
+            }
+            else if(beginningMonthInt < monthInt)
+            {
+                ok = 1;
+            }
+        }
+        else if(beginningYearInt < yearInt)
+        {
+            ok = 1;
+        }
+        if(ok == 1)
+        {
+            if(endYearInt == yearInt)
+            {
+                if(endMonthInt == monthInt)
+                {
+                    if(endDayInt >= dayInt)
+                    {
+                        exist = 1;
+                        ok = 0;
+                        break;
+                    }
+                }
+                else if(endMonthInt > monthInt)
+                {
+                    exist = 1;
+                    ok = 0;
+                    break;
+                }
+            }
+            else if(endYearInt > yearInt)
+            {
+                exist = 1;
+                ok = 0;
+                break;
+            }
+        }
+        tempExpense = tempExpense->link;
+    }
+    if(exist == 1)
+    {
+        tempExpense = startExpense;
+        while(tempExpense != NULL)
+        {
+            ok = 0;
+            yearInt = atoi(tempExpense->date.year);
+            monthInt = atoi(tempExpense->date.month);
+            dayInt = atoi(tempExpense->date.day);
+            if(beginningYearInt == yearInt)
+            {
+                if(beginningMonthInt == monthInt)
+                {
+                    if(beginningDayInt <= dayInt)
+                    {
+                        ok = 1;
+                    }
+                }
+                else if(beginningMonthInt < monthInt)
+                {
+                    ok = 1;
+                }
+            }
+            else if(beginningYearInt < yearInt)
+            {
+                ok = 1;
+            }
+            if(ok == 1)
+            {
+                if(endYearInt == yearInt)
+                {
+                    if(endMonthInt == monthInt)
+                    {
+                        if(endDayInt >= dayInt)
+                        {
+                            amount = atoi(tempExpense->amount);
+                            sumExpenses += amount;
+                            if(strcmp(tempExpense->item, "Clothing") == 0)
+                            {
+                                sumClothing += amount;
+                            }
+                            else if(strcmp(tempExpense->item, "Transportation") == 0)
+                            {
+                                sumTransportation += amount;
+                            }
+                                else if(strcmp(tempExpense->item, "Tuition Fees") == 0)
+                                {
+                                    sumTuitionFees += amount;
+                                }
+                                    else if(strcmp(tempExpense->item, "Entertainment") == 0)
+                                    {
+                                        sumEntertainment += amount;
+                                    }
+                                        else if(strcmp(tempExpense->item, "Mobile and Internet Bill") == 0)
+                                        {
+                                            sumMobileAndInternetBill += amount;
+                                        }
+                                            else if(strcmp(tempExpense->item, "Medical Expenses") == 0)
+                                            {
+                                                sumMedicalExpenses += amount;
+                                            }
+                                                else if(strcmp(tempExpense->item, "Donate to Charity") == 0)
+                                                {
+                                                    sumDonateToCharity += amount;
+                                                }
+                        }
+                    }
+                    else if(endMonthInt > monthInt)
+                    {
+                        amount = atoi(tempExpense->amount);
+                        sumExpenses += amount;
+                        if(strcmp(tempExpense->item, "Clothing") == 0)
+                            {
+                                sumClothing += amount;
+                            }
+                            else if(strcmp(tempExpense->item, "Transportation") == 0)
+                            {
+                                sumTransportation += amount;
+                            }
+                                else if(strcmp(tempExpense->item, "Tuition Fees") == 0)
+                                {
+                                    sumTuitionFees += amount;
+                                }
+                                    else if(strcmp(tempExpense->item, "Entertainment") == 0)
+                                    {
+                                        sumEntertainment += amount;
+                                    }
+                                        else if(strcmp(tempExpense->item, "Mobile and Internet Bill") == 0)
+                                        {
+                                            sumMobileAndInternetBill += amount;
+                                        }
+                                            else if(strcmp(tempExpense->item, "Medical Expenses") == 0)
+                                            {
+                                                sumMedicalExpenses += amount;
+                                            }
+                                                else if(strcmp(tempExpense->item, "Donate to Charity") == 0)
+                                                {
+                                                    sumDonateToCharity += amount;
+                                                }
+                    }
+                }
+                else if(endYearInt > yearInt)
+                {
+                    amount = atoi(tempExpense->amount);
+                    sumExpenses += amount;
+                    if(strcmp(tempExpense->item, "Clothing") == 0)
+                    {
+                        sumClothing += amount;
+                    }
+                    else if(strcmp(tempExpense->item, "Transportation") == 0)
+                    {
+                        sumTransportation += amount;
+                    }
+                        else if(strcmp(tempExpense->item, "Tuition Fees") == 0)
+                        {
+                            sumTuitionFees += amount;
+                        }
+                            else if(strcmp(tempExpense->item, "Entertainment") == 0)
+                            {
+                                sumEntertainment += amount;
+                            }
+                                else if(strcmp(tempExpense->item, "Mobile and Internet Bill") == 0)
+                                {
+                                    sumMobileAndInternetBill += amount;
+                                }
+                                    else if(strcmp(tempExpense->item, "Medical Expenses") == 0)
+                                    {
+                                        sumMedicalExpenses += amount;
+                                    }
+                                        else if(strcmp(tempExpense->item, "Donate to Charity") == 0)
+                                        {
+                                            sumDonateToCharity += amount;
+                                        }
+                }
+            }
+            tempExpense = tempExpense->link;
+        }
+        float ratioClothing, ratioTransportation, ratioTuitionFees, ratioEntertainment, ratioMobileAndInternetBill, ratioMedicalExpenses, ratioDonateToCharity;
+        ratioClothing = ((float)sumClothing / sumExpenses) * 100;
+        ratioTransportation = ((float)sumTransportation / sumExpenses) * 100;
+        ratioTuitionFees = ((float)sumTuitionFees / sumExpenses) * 100;
+        ratioEntertainment = ((float)sumEntertainment / sumExpenses) * 100;
+        ratioMobileAndInternetBill = ((float)sumMobileAndInternetBill / sumExpenses) * 100;
+        ratioMedicalExpenses = ((float)sumMedicalExpenses / sumExpenses) * 100;
+        ratioDonateToCharity = ((float)sumDonateToCharity / sumExpenses) * 100;
+        setTextColor(AQUA);
+        printf("\n>> ");
+        setTextColor(WHITE);
+        printf("The ratio of different expenses to each other between %s/%s/%s and %s/%s/%s: ", beginningYear, beginningMonth, beginningDay, endYear, endMonth, endDay);
+        setTextColor(AQUA);
+        printf("\n\n> ");
+        setTextColor(WHITE);
+        printf("Clothing = %.2f%%", ratioClothing);
+        setTextColor(AQUA);
+        printf("\n> ");
+        setTextColor(WHITE);
+        printf("Transportation = %.2f%%", ratioTransportation);
+        setTextColor(AQUA);
+        printf("\n> ");
+        setTextColor(WHITE);
+        printf("Tuition Fees = %.2f%%", ratioTuitionFees);
+        setTextColor(AQUA);
+        printf("\n> ");
+        setTextColor(WHITE);
+        printf("Entertainment = %.2f%%", ratioEntertainment);
+        setTextColor(AQUA);
+        printf("\n> ");
+        setTextColor(WHITE);
+        printf("Mobile and Internet Bill = %.2f%%", ratioMobileAndInternetBill);
+        setTextColor(AQUA);
+        printf("\n> ");
+        setTextColor(WHITE);
+        printf("Medical Expenses = %.2f%%", ratioMedicalExpenses);
+        setTextColor(AQUA);
+        printf("\n> ");
+        setTextColor(WHITE);
+        printf("Donate to Charity = %.2f%%\n\n", ratioDonateToCharity);
+        printf("--------------------------------------------------\n\n");
+        tempExpense = endExpense = startExpense;
+        while(tempExpense != NULL)
+        {
+            endExpense = tempExpense->link;
+            free(tempExpense);
+            tempExpense = endExpense;
+        }
+        printf("1. Expenses Statistics Menu\n2. EXIT\n\n");
+        printf(">>Please Enter Your Choice: ");
+        choice = getchar();
+        fflush(stdin);
+        while(choice != '1' && choice != '2')
+        {
+            setTextColor(RED);
+            printf("\nERROR: The number entered is invalid! Try again!\n\n");
+            setTextColor(WHITE);
+            printf(">>Please Enter Your Choice: ");
+            choice = getchar();
+            fflush(stdin);
+        }
+        if(choice == '1')
+        {
+            expensesStatisticsMenu();
+        }
+        else
+        {
+            exit(0);
+        }
+    }
+    else
+    {
+        tempExpense = endExpense = startExpense;
+        while(tempExpense != NULL)
+        {
+            endExpense = tempExpense->link;
+            free(tempExpense);
+            tempExpense = endExpense;
+        }
+        setTextColor(RED);
+        printf("\nERROR: No expense was recorded between %s/%s/%s and %s/%s/%s!\n\n", beginningYear, beginningMonth, beginningDay, endYear, endMonth, endDay);
+        setTextColor(WHITE);
+        printf("1. Try again!\n2. EXIT\n\n0. Expenses Statistics Menu\n\n");
+        printf(">>Please Enter Your Choice: ");
+        choice = getchar();
+        fflush(stdin);
+        while(choice != '1' && choice != '2' && choice != '0')
+        {
+            setTextColor(RED);
+            printf("\nERROR: The number entered is invalid! Try again!\n\n");
+            setTextColor(WHITE);
+            printf(">>Please Enter Your Choice: ");
+            choice = getchar();
+            fflush(stdin);
+        }
+        if(choice == '1')
+        {
+            ratioExpensesInterval();
+        }
+        else if(choice == '0')
+        {
+            expensesStatisticsMenu();
+        }
+            else
+            {
+                exit(0);
+            }
+    }
+}
+
+//This function displays the details of expenses in a history interval and goes to the next step based on the user's choice
+void detailsExpensesInterval(void)
+{
+    int beginningYearInt, beginningMonthInt, beginningDayInt, endYearInt, endMonthInt, endDayInt, yearInt, monthInt, dayInt, correct=0, ok=0, exist=0;
+    char beginningYear[5], beginningMonth[3], beginningDay[3], endYear[5], endMonth[3], endDay[3], choice;
+    system("cls");
+    printf("--------------- Expenses Statistics ---------------\n\n");
+    printf("Please enter the beginning of the interval(YYYY/MM/DD): ");
+    scanf("%4s/%2s/%2s", beginningYear, beginningMonth, beginningDay);
+    fflush(stdin);
+    printf("Please enter the end of the interval(YYYY/MM/DD): ");
+    scanf("%4s/%2s/%2s", endYear, endMonth, endDay);
+    fflush(stdin);
+    beginningYearInt = atoi(beginningYear);
+    beginningMonthInt = atoi(beginningMonth);
+    beginningDayInt = atoi(beginningDay);
+    endYearInt = atoi(endYear);
+    endMonthInt = atoi(endMonth);
+    endDayInt = atoi(endDay);
+    if(beginningYearInt == endYearInt)
+    {
+        if(beginningMonthInt == endMonthInt)
+        {
+            if(beginningDayInt <= endDayInt)
+            {
+                correct = 1;
+            }
+        }
+        else if(beginningMonthInt < endMonthInt)
+        {
+            correct = 1;
+        }
+    }
+    else if(beginningYearInt < endYearInt)
+    {
+        correct = 1;
+    }
+    while(correct == 0)
+    {
+        system("cls");
+        printf("--------------- Expenses Statistics ---------------\n\n");
+        setTextColor(RED);
+        printf("ERROR: The beginning date of the interval must be before the end date of the interval!\n\n");
+        setTextColor(WHITE);
+        printf("Please enter the beginning of the interval(YYYY/MM/DD): ");
+        scanf("%4s/%2s/%2s", beginningYear, beginningMonth, beginningDay);
+        fflush(stdin);
+        printf("Please enter the end of the interval(YYYY/MM/DD): ");
+        scanf("%4s/%2s/%2s", endYear, endMonth, endDay);
+        fflush(stdin);
+        beginningYearInt = atoi(beginningYear);
+        beginningMonthInt = atoi(beginningMonth);
+        beginningDayInt = atoi(beginningDay);
+        endYearInt = atoi(endYear);
+        endMonthInt = atoi(endMonth);
+        endDayInt = atoi(endDay);
+        if(beginningYearInt == endYearInt)
+        {
+            if(beginningMonthInt == endMonthInt)
+            {
+                if(beginningDayInt <= endDayInt)
+                {
+                    correct = 1;
+                }
+            }
+            else if(beginningMonthInt < endMonthInt)
+            {
+                correct = 1;
+            }
+        }
+        else if(beginningYearInt < endYearInt)
+        {
+            correct = 1;
+        }
+    }
+    char expensesFileName[80] = "Expenses_";
+    strcat(expensesFileName, Name);
+    strcat(expensesFileName, LastName);
+    strcat(expensesFileName, ".txt");
+    struct expense *startExpense, *endExpense, *tempExpense;
+    FILE *f;
+    f = fopen(expensesFileName, "r");
+    if(f != NULL)
+    {
+        tempExpense = malloc(sizeof(struct expense));
+        tempExpense->link = NULL;
+        fread(tempExpense, sizeof(struct expense), 1, f);
+        startExpense = endExpense = tempExpense;
+        while(feof(f) == 0)
+        {
+            tempExpense = malloc(sizeof(struct expense));
+            tempExpense->link = NULL;
+            fread(tempExpense, sizeof(struct expense), 1, f);
+            endExpense->link = tempExpense;
+            endExpense = tempExpense;
+        }
+        fclose(f);
+    }
+    else
+    {
+        printf("File could not be opened!");
+        exit(0);
+    }
+    tempExpense = startExpense;
+    while(tempExpense != NULL)
+    {
+        ok = 0;
+        yearInt = atoi(tempExpense->date.year);
+        monthInt = atoi(tempExpense->date.month);
+        dayInt = atoi(tempExpense->date.day);
+        if(beginningYearInt == yearInt)
+        {
+            if(beginningMonthInt == monthInt)
+            {
+                if(beginningDayInt <= dayInt)
+                {
+                    ok = 1;
+                }
+            }
+            else if(beginningMonthInt < monthInt)
+            {
+                ok = 1;
+            }
+        }
+        else if(beginningYearInt < yearInt)
+        {
+            ok = 1;
+        }
+        if(ok == 1)
+        {
+            if(endYearInt == yearInt)
+            {
+                if(endMonthInt == monthInt)
+                {
+                    if(endDayInt >= dayInt)
+                    {
+                        exist = 1;
+                        ok = 0;
+                        break;
+                    }
+                }
+                else if(endMonthInt > monthInt)
+                {
+                    exist = 1;
+                    ok = 0;
+                    break;
+                }
+            }
+            else if(endYearInt > yearInt)
+            {
+                exist = 1;
+                ok = 0;
+                break;
+            }
+        }
+        tempExpense = tempExpense->link;
+    }
+    if(exist == 1)
+    {
+        setTextColor(AQUA);
+        printf("\n Amount      | Item                     | Date       | Description\n");
+        setTextColor(WHITE);
+        tempExpense = startExpense;
+        while(tempExpense != NULL)
+        {
+            ok = 0;
+            yearInt = atoi(tempExpense->date.year);
+            monthInt = atoi(tempExpense->date.month);
+            dayInt = atoi(tempExpense->date.day);
+            if(beginningYearInt == yearInt)
+            {
+                if(beginningMonthInt == monthInt)
+                {
+                    if(beginningDayInt <= dayInt)
+                    {
+                        ok = 1;
+                    }
+                }
+                else if(beginningMonthInt < monthInt)
+                {
+                    ok = 1;
+                }
+            }
+            else if(beginningYearInt < yearInt)
+            {
+                ok = 1;
+            }
+            if(ok == 1)
+            {
+                if(endYearInt == yearInt)
+                {
+                    if(endMonthInt == monthInt)
+                    {
+                        if(endDayInt >= dayInt)
+                        {
+                            printf(" %-12s", tempExpense->amount);
+                            setTextColor(AQUA);
+                            printf("|");
+                            setTextColor(WHITE);
+                            printf(" %-25s", tempExpense->item);
+                            setTextColor(AQUA);
+                            printf("|");
+                            setTextColor(WHITE);
+                            printf(" %s/%s/%s ", tempExpense->date.year, tempExpense->date.month, tempExpense->date.day);
+                            setTextColor(AQUA);
+                            printf("|");
+                            setTextColor(WHITE);
+                            printf(" %s\n", tempExpense->description);
+                        }
+                    }
+                    else if(endMonthInt > monthInt)
+                    {
+                        printf(" %-12s", tempExpense->amount);
+                        setTextColor(AQUA);
+                        printf("|");
+                        setTextColor(WHITE);
+                        printf(" %-25s", tempExpense->item);
+                        setTextColor(AQUA);
+                        printf("|");
+                        setTextColor(WHITE);
+                        printf(" %s/%s/%s ", tempExpense->date.year, tempExpense->date.month, tempExpense->date.day);
+                        setTextColor(AQUA);
+                        printf("|");
+                        setTextColor(WHITE);
+                        printf(" %s\n", tempExpense->description);
+                    }
+                }
+                else if(endYearInt > yearInt)
+                {
+                    printf(" %-12s", tempExpense->amount);
+                    setTextColor(AQUA);
+                    printf("|");
+                    setTextColor(WHITE);
+                    printf(" %-25s", tempExpense->item);
+                    setTextColor(AQUA);
+                    printf("|");
+                    setTextColor(WHITE);
+                    printf(" %s/%s/%s ", tempExpense->date.year, tempExpense->date.month, tempExpense->date.day);
+                    setTextColor(AQUA);
+                    printf("|");
+                    setTextColor(WHITE);
+                    printf(" %s\n", tempExpense->description);
+                }
+            }
+            tempExpense = tempExpense->link;
+        }
+        printf("\n--------------------------------------------------\n\n");
+        tempExpense = endExpense = startExpense;
+        while(tempExpense != NULL)
+        {
+            endExpense = tempExpense->link;
+            free(tempExpense);
+            tempExpense = endExpense;
+        }
+        printf("1. Expenses Statistics Menu\n2. EXIT\n\n");
+        printf(">>Please Enter Your Choice: ");
+        choice = getchar();
+        fflush(stdin);
+        while(choice != '1' && choice != '2')
+        {
+            setTextColor(RED);
+            printf("\nERROR: The number entered is invalid! Try again!\n\n");
+            setTextColor(WHITE);
+            printf(">>Please Enter Your Choice: ");
+            choice = getchar();
+            fflush(stdin);
+        }
+        if(choice == '1')
+        {
+            expensesStatisticsMenu();
+        }
+        else
+        {
+            exit(0);
+        }
+    }
+    else
+    {
+        tempExpense = endExpense = startExpense;
+        while(tempExpense != NULL)
+        {
+            endExpense = tempExpense->link;
+            free(tempExpense);
+            tempExpense = endExpense;
+        }
+        setTextColor(RED);
+        printf("\nERROR: No expense was recorded between %s/%s/%s and %s/%s/%s!\n\n", beginningYear, beginningMonth, beginningDay, endYear, endMonth, endDay);
+        setTextColor(WHITE);
+        printf("1. Try again!\n2. EXIT\n\n0. Expenses Statistics Menu\n\n");
+        printf(">>Please Enter Your Choice: ");
+        choice = getchar();
+        fflush(stdin);
+        while(choice != '1' && choice != '2' && choice != '0')
+        {
+            setTextColor(RED);
+            printf("\nERROR: The number entered is invalid! Try again!\n\n");
+            setTextColor(WHITE);
+            printf(">>Please Enter Your Choice: ");
+            choice = getchar();
+            fflush(stdin);
+        }
+        if(choice == '1')
+        {
+            detailsExpensesInterval();
+        }
+        else if(choice == '0')
+        {
+            expensesStatisticsMenu();
+        }
+            else
+            {
+                exit(0);
+            }
+    }
+}
+
+//This function displays the most expense in a history interval and goes to the next step based on the user's choice
+void mostExpenseInterval(void)
+{
+    int beginningYearInt, beginningMonthInt, beginningDayInt, endYearInt, endMonthInt, endDayInt, yearInt, monthInt, dayInt, correct=0, ok=0, exist=0, mostExpense=0, amount;
+    char beginningYear[5], beginningMonth[3], beginningDay[3], endYear[5], endMonth[3], endDay[3], choice;
+    system("cls");
+    printf("--------------- Expenses Statistics ---------------\n\n");
+    printf("Please enter the beginning of the interval(YYYY/MM/DD): ");
+    scanf("%4s/%2s/%2s", beginningYear, beginningMonth, beginningDay);
+    fflush(stdin);
+    printf("Please enter the end of the interval(YYYY/MM/DD): ");
+    scanf("%4s/%2s/%2s", endYear, endMonth, endDay);
+    fflush(stdin);
+    beginningYearInt = atoi(beginningYear);
+    beginningMonthInt = atoi(beginningMonth);
+    beginningDayInt = atoi(beginningDay);
+    endYearInt = atoi(endYear);
+    endMonthInt = atoi(endMonth);
+    endDayInt = atoi(endDay);
+    if(beginningYearInt == endYearInt)
+    {
+        if(beginningMonthInt == endMonthInt)
+        {
+            if(beginningDayInt <= endDayInt)
+            {
+                correct = 1;
+            }
+        }
+        else if(beginningMonthInt < endMonthInt)
+        {
+            correct = 1;
+        }
+    }
+    else if(beginningYearInt < endYearInt)
+    {
+        correct = 1;
+    }
+    while(correct == 0)
+    {
+        system("cls");
+        printf("--------------- Expenses Statistics ---------------\n\n");
+        setTextColor(RED);
+        printf("ERROR: The beginning date of the interval must be before the end date of the interval!\n\n");
+        setTextColor(WHITE);
+        printf("Please enter the beginning of the interval(YYYY/MM/DD): ");
+        scanf("%4s/%2s/%2s", beginningYear, beginningMonth, beginningDay);
+        fflush(stdin);
+        printf("Please enter the end of the interval(YYYY/MM/DD): ");
+        scanf("%4s/%2s/%2s", endYear, endMonth, endDay);
+        fflush(stdin);
+        beginningYearInt = atoi(beginningYear);
+        beginningMonthInt = atoi(beginningMonth);
+        beginningDayInt = atoi(beginningDay);
+        endYearInt = atoi(endYear);
+        endMonthInt = atoi(endMonth);
+        endDayInt = atoi(endDay);
+        if(beginningYearInt == endYearInt)
+        {
+            if(beginningMonthInt == endMonthInt)
+            {
+                if(beginningDayInt <= endDayInt)
+                {
+                    correct = 1;
+                }
+            }
+            else if(beginningMonthInt < endMonthInt)
+            {
+                correct = 1;
+            }
+        }
+        else if(beginningYearInt < endYearInt)
+        {
+            correct = 1;
+        }
+    }
+    char expensesFileName[80] = "Expenses_";
+    strcat(expensesFileName, Name);
+    strcat(expensesFileName, LastName);
+    strcat(expensesFileName, ".txt");
+    struct expense *startExpense, *endExpense, *tempExpense;
+    FILE *f;
+    f = fopen(expensesFileName, "r");
+    if(f != NULL)
+    {
+        tempExpense = malloc(sizeof(struct expense));
+        tempExpense->link = NULL;
+        fread(tempExpense, sizeof(struct expense), 1, f);
+        startExpense = endExpense = tempExpense;
+        while(feof(f) == 0)
+        {
+            tempExpense = malloc(sizeof(struct expense));
+            tempExpense->link = NULL;
+            fread(tempExpense, sizeof(struct expense), 1, f);
+            endExpense->link = tempExpense;
+            endExpense = tempExpense;
+        }
+        fclose(f);
+    }
+    else
+    {
+        printf("File could not be opened!");
+        exit(0);
+    }
+    tempExpense = startExpense;
+    while(tempExpense != NULL)
+    {
+        ok = 0;
+        yearInt = atoi(tempExpense->date.year);
+        monthInt = atoi(tempExpense->date.month);
+        dayInt = atoi(tempExpense->date.day);
+        if(beginningYearInt == yearInt)
+        {
+            if(beginningMonthInt == monthInt)
+            {
+                if(beginningDayInt <= dayInt)
+                {
+                    ok = 1;
+                }
+            }
+            else if(beginningMonthInt < monthInt)
+            {
+                ok = 1;
+            }
+        }
+        else if(beginningYearInt < yearInt)
+        {
+            ok = 1;
+        }
+        if(ok == 1)
+        {
+            if(endYearInt == yearInt)
+            {
+                if(endMonthInt == monthInt)
+                {
+                    if(endDayInt >= dayInt)
+                    {
+                        exist = 1;
+                        ok = 0;
+                        break;
+                    }
+                }
+                else if(endMonthInt > monthInt)
+                {
+                    exist = 1;
+                    ok = 0;
+                    break;
+                }
+            }
+            else if(endYearInt > yearInt)
+            {
+                exist = 1;
+                ok = 0;
+                break;
+            }
+        }
+        tempExpense = tempExpense->link;
+    }
+    if(exist == 1)
+    {
+        tempExpense = startExpense;
+        while(tempExpense != NULL)
+        {
+            ok = 0;
+            yearInt = atoi(tempExpense->date.year);
+            monthInt = atoi(tempExpense->date.month);
+            dayInt = atoi(tempExpense->date.day);
+            if(beginningYearInt == yearInt)
+            {
+                if(beginningMonthInt == monthInt)
+                {
+                    if(beginningDayInt <= dayInt)
+                    {
+                        ok = 1;
+                    }
+                }
+                else if(beginningMonthInt < monthInt)
+                {
+                    ok = 1;
+                }
+            }
+            else if(beginningYearInt < yearInt)
+            {
+                ok = 1;
+            }
+            if(ok == 1)
+            {
+                if(endYearInt == yearInt)
+                {
+                    if(endMonthInt == monthInt)
+                    {
+                        if(endDayInt >= dayInt)
+                        {
+                            amount = atoi(tempExpense->amount);
+                            if(amount >= mostExpense)
+                            {
+                                mostExpense = amount;
+                            }
+                        }
+                    }
+                    else if(endMonthInt > monthInt)
+                    {
+                        amount = atoi(tempExpense->amount);
+                        if(amount >= mostExpense)
+                        {
+                            mostExpense = amount;
+                        }
+                    }
+                }
+                else if(endYearInt > yearInt)
+                {
+                    amount = atoi(tempExpense->amount);
+                    if(amount >= mostExpense)
+                    {
+                        mostExpense = amount;
+                    }
+                }
+            }
+            tempExpense = tempExpense->link;
+        }
+        setTextColor(AQUA);
+        printf("\n>> ");
+        setTextColor(WHITE);
+        printf("The most expense between %s/%s/%s and %s/%s/%s: ", beginningYear, beginningMonth, beginningDay, endYear, endMonth, endDay);
+        printf("%d Rials\n\n", mostExpense);
+        printf("--------------------------------------------------\n\n");
+        tempExpense = endExpense = startExpense;
+        while(tempExpense != NULL)
+        {
+            endExpense = tempExpense->link;
+            free(tempExpense);
+            tempExpense = endExpense;
+        }
+        printf("1. Expenses Statistics Menu\n2. EXIT\n\n");
+        printf(">>Please Enter Your Choice: ");
+        choice = getchar();
+        fflush(stdin);
+        while(choice != '1' && choice != '2')
+        {
+            setTextColor(RED);
+            printf("\nERROR: The number entered is invalid! Try again!\n\n");
+            setTextColor(WHITE);
+            printf(">>Please Enter Your Choice: ");
+            choice = getchar();
+            fflush(stdin);
+        }
+        if(choice == '1')
+        {
+            expensesStatisticsMenu();
+        }
+        else
+        {
+            exit(0);
+        }
+    }
+    else
+    {
+        tempExpense = endExpense = startExpense;
+        while(tempExpense != NULL)
+        {
+            endExpense = tempExpense->link;
+            free(tempExpense);
+            tempExpense = endExpense;
+        }
+        setTextColor(RED);
+        printf("\nERROR: No expense was recorded between %s/%s/%s and %s/%s/%s!\n\n", beginningYear, beginningMonth, beginningDay, endYear, endMonth, endDay);
+        setTextColor(WHITE);
+        printf("1. Try again!\n2. EXIT\n\n0. Expenses Statistics Menu\n\n");
+        printf(">>Please Enter Your Choice: ");
+        choice = getchar();
+        fflush(stdin);
+        while(choice != '1' && choice != '2' && choice != '0')
+        {
+            setTextColor(RED);
+            printf("\nERROR: The number entered is invalid! Try again!\n\n");
+            setTextColor(WHITE);
+            printf(">>Please Enter Your Choice: ");
+            choice = getchar();
+            fflush(stdin);
+        }
+        if(choice == '1')
+        {
+            mostExpenseInterval();
+        }
+        else if(choice == '0')
+        {
+            expensesStatisticsMenu();
+        }
+            else
+            {
+                exit(0);
+            }
+    }
+}
+
+//This function receives change in user information and places it in file Profiles and goes to the next step based on the user's choice
+void settings(void)
+{
+    int i=0, j=1, res, lenPassword;
+    char password[30], password2[30], codedPassword[30], mobile_number[12], ch, choice;
+    struct profile *start, *end, *temp;
+    FILE *f;
+    f = fopen("Profiles.txt", "r");
+    if(f != NULL)
+    {
+        temp = malloc(sizeof(struct profile));
+        temp->link = NULL;
+        fread(temp, sizeof(struct profile), 1, f);
+        start = end = temp;
+        while(feof(f) == 0)
+        {
+            temp = malloc(sizeof(struct profile));
+            temp->link = NULL;
+            fread(temp, sizeof(struct profile), 1, f);
+            end->link = temp;
+            end = temp;
+        }
+        fclose(f);
+    }
+    else
+    {
+        printf("File could not be opened!");
+        exit(0);
+    }
+    temp = start;
+    while(temp != NULL)
+    {
+        if(strcmp(temp->national_code, NationalCode) == 0)
+        {
+            break;
+        }
+        temp = temp->link;
+    }
+    system("cls");
+    printf("--------------- Settings ---------------\n\n");
+    printf("Which part of your profile do you want to change?\n\n");
+    printf("1. Password\n2. Mobile Number\n3. Email\n\n0. Main Menu\n\n");
+    printf(">>Please Enter Your Choice: ");
+    choice = getchar();
+    fflush(stdin);
+    while(choice != '1' && choice != '2' && choice != '3' && choice != '0')
+    {
+        system("cls");
+        printf("--------------- Settings ---------------\n\n");
+        printf("Which part of your profile do you want to change?\n\n");
+        printf("1. Password\n2. Mobile Number\n3. Email\n\n0. Main Menu\n\n");
+        setTextColor(RED);
+        printf("ERROR: The number entered is invalid! Try again!\n\n");
+        setTextColor(WHITE);
+        printf(">>Please Enter Your Choice: ");
+        choice = getchar();
+        fflush(stdin);
+    }
+    printf("\n");
+    if(choice == '1')
+    {
+        printf("Enter your new password: ");
+        while(1)
+        {
+            ch = getch();
+            if((ch>='a'&&ch<='z')||(ch>='A'&&ch<='Z')||(ch>='0'&&ch<='9'))
+            {
+                password[i] = ch;
+                i++;
+                printf("*");
+            }
+            if(ch=='\b'&&i>=1)
+            {
+                printf("\b \b");
+                i--;
+            }
+            if(ch=='\r')
+            {
+                password[i] = '\0';
+                i = 0;
+                printf("\n");
+                break;
+            }
+        }
+        res = checkFormatPassword(password);
+        if(res == 2)
+        {
+            printf("Re-enter your new password: ");
+            while(1)
+            {
+                ch = getch();
+                if((ch>='a'&&ch<='z')||(ch>='A'&&ch<='Z')||(ch>='0'&&ch<='9'))
+                {
+                    password2[i] = ch;
+                    i++;
+                    printf("*");
+                }
+                if(ch=='\b'&&i>=1)
+                {
+                    printf("\b \b");
+                    i--;
+                }
+                if(ch=='\r')
+                {
+                    password2[i] = '\0';
+                    i = 0;
+                    printf("\n");
+                    break;
+                }
+            }
+            if(strcmp(password, password2) == 0)
+            {
+                strcpy(temp->password, password);
+            }
+            else
+            {
+                while(strcmp(password, password2) != 0)
+                {
+                    setTextColor(RED);
+                    printf("\nERROR: The re-password is incorrect! Try again!\n\n");
+                    setTextColor(WHITE);
+                    printf("Re-enter your new password: ");
+                    while(1)
+                    {
+                        ch = getch();
+                        if((ch>='a'&&ch<='z')||(ch>='A'&&ch<='Z')||(ch>='0'&&ch<='9'))
+                        {
+                            password2[i] = ch;
+                            i++;
+                            printf("*");
+                        }
+                        if(ch=='\b'&&i>=1)
+                        {
+                            printf("\b \b");
+                            i--;
+                        }
+                        if(ch=='\r')
+                        {
+                            password2[i] = '\0';
+                            i = 0;
+                            printf("\n");
+                            break;
+                        }
+                    }
+                }
+                strcpy(temp->password, password);
+            }
+        }
+        else
+        {
+            while(res != 2)
+            {
+                if(res == 1)
+                {
+                    setTextColor(RED);
+                    printf("\nERROR: The password entered must contain at least 6 characters!\n\n");
+                    setTextColor(WHITE);
+                }
+                else
+                {
+                    setTextColor(RED);
+                    printf("\nERROR: The password entered must contain at least one digit, one uppercase and one lowercase letter!\n\n");
+                    setTextColor(WHITE);
+                }
+                printf("Enter your new password: ");
+                while(1)
+                {
+                    ch = getch();
+                    if((ch>='a'&&ch<='z')||(ch>='A'&&ch<='Z')||(ch>='0'&&ch<='9'))
+                    {
+                        password[i] = ch;
+                        i++;
+                        printf("*");
+                    }
+                    if(ch=='\b'&&i>=1)
+                    {
+                        printf("\b \b");
+                        i--;
+                    }
+                    if(ch=='\r')
+                    {
+                        password[i] = '\0';
+                        i = 0;
+                        printf("\n");
+                        break;
+                    }
+                }
+                res = checkFormatPassword(password);
+            }
+            printf("Re-enter your new password: ");
+            while(1)
+            {
+                ch = getch();
+                if((ch>='a'&&ch<='z')||(ch>='A'&&ch<='Z')||(ch>='0'&&ch<='9'))
+                {
+                    password2[i] = ch;
+                    i++;
+                    printf("*");
+                }
+                if(ch=='\b'&&i>=1)
+                {
+                    printf("\b \b");
+                    i--;
+                }
+                if(ch=='\r')
+                {
+                    password2[i] = '\0';
+                    i = 0;
+                    printf("\n");
+                    break;
+                }
+            }
+            if(strcmp(password, password2) == 0)
+            {
+                strcpy(temp->password, password);
+            }
+            else
+            {
+                while(strcmp(password, password2) != 0)
+                {
+                    setTextColor(RED);
+                    printf("\nERROR: The re-password is incorrect! Try again!\n\n");
+                    setTextColor(WHITE);
+                    printf("Re-enter your new password: ");
+                    while(1)
+                    {
+                        ch = getch();
+                        if((ch>='a'&&ch<='z')||(ch>='A'&&ch<='Z')||(ch>='0'&&ch<='9'))
+                        {
+                            password2[i] = ch;
+                            i++;
+                            printf("*");
+                        }
+                        if(ch=='\b'&&i>=1)
+                        {
+                            printf("\b \b");
+                            i--;
+                        }
+                        if(ch=='\r')
+                        {
+                            password2[i] = '\0';
+                            i = 0;
+                            printf("\n");
+                            break;
+                        }
+                    }
+                }
+                strcpy(temp->password, password);
+            }
+        }
+        lenPassword = strlen(password);
+        for(i=0; i<lenPassword; i++)
+        {
+            codedPassword[i] = password[i] + j;
+            j++;
+        }
+        codedPassword[i] = '\0';
+        strcpy(temp->password, codedPassword);
+    }
+    else if(choice == '2')
+    {
+        printf("Enter your new mobile number: ");
+        gets(mobile_number);
+        res = checkFormatMobileNumber(mobile_number);
+        if(res == 2)
+        {
+            strcpy(temp->mobile_number, mobile_number);
+        }
+        else
+        {
+            while(res != 2)
+            {
+                if(res == 1)
+                {
+                    setTextColor(RED);
+                    printf("\nERROR: The mobile number entered must contain 11 digits!\n\n");
+                    setTextColor(WHITE);
+                }
+                else
+                {
+                    setTextColor(RED);
+                    printf("\nERROR: The mobile number entered must contain only digits!\n\n");
+                    setTextColor(WHITE);
+                }
+                printf("Enter your new mobile number: ");
+                gets(mobile_number);
+                res = checkFormatMobileNumber(mobile_number);
+            }
+            strcpy(temp->mobile_number, mobile_number);
+        }
+    }
+        else if(choice == '3')
+        {
+            printf("Enter your new email: ");
+            gets(temp->email);
+        }
+            else
+            {
+                mainMenu();
+            }
+    if(remove("Profiles.txt") == 0)
+    {
+        f = fopen("Profiles.txt", "a");
+        if(f != NULL)
+        {
+            temp = start;
+            while(temp != NULL)
+            {
+                fwrite(temp, sizeof(struct profile), 1, f);
+                temp = temp->link;
+            }
+            fclose(f);
+            setTextColor(GREEN);
+            printf("\nChange was successfully recorded!\n\n");
+            setTextColor(WHITE);
+            printf("----------------------------------------\n\n");
+        }
+        else
+        {
+            printf("File could not be opened!");
+            exit(0);
+        }
+    }
+    else
+    {
+        printf("File could not be deleted!");
+    }
+    printf("1. Another Change\n2. Main Menu\n3. EXIT\n\n");
+    printf(">>Please Enter Your Choice: ");
+    choice = getchar();
+    fflush(stdin);
+    while(choice != '1' && choice != '2' && choice != '3')
+    {
+        setTextColor(RED);
+        printf("\nERROR: The number entered is invalid! Try again!\n\n");
+        setTextColor(WHITE);
+        printf(">>Please Enter Your Choice: ");
+        choice = getchar();
+        fflush(stdin);
+    }
+    if(choice == '1')
+    {
+        settings();
+    }
+    else if(choice == '2')
+    {
+        mainMenu();
+    }
+        else
+        {
+            exit(0);
+        }
 }
