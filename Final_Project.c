@@ -9,7 +9,9 @@ void loginMenu(void);
 int checkFormatName(char *x);
 int checkFormatNationalCode(char *x);
 int checkFormatMobileNumber(char *x);
+int checkFormatEmail(char *x);
 int checkFormatPassword(char *x);
+int checkFormatAmount(char *x);
 void signUp(void);
 void login(void);
 void mainMenu(void);
@@ -32,6 +34,7 @@ void totalCertainExpenseInterval(void);
 void ratioExpensesInterval(void);
 void detailsExpensesInterval(void);
 void mostExpenseInterval(void);
+void wordSearchExpensesDescription(void);
 void settings(void);
 
 char Name[30], LastName[40], NationalCode[11];
@@ -221,6 +224,42 @@ int checkFormatMobileNumber(char *x)
     }
 }
 
+//This function receives a string(email) and checks its format(returns 0: if the email does not end at @gmail.com, return 1: if email is correct)
+int checkFormatEmail(char *x)
+{
+    int i=0;
+    char gmail[11];
+    if(*x == '\0')
+    {
+        return 0;
+    }
+    else
+    {
+        while(*x != '\0')
+        {
+            if(*x == '@')
+            {
+                while(*x != '\0')
+                {
+                    gmail[i] = *x;
+                    i++;
+                    x++;
+                }
+                gmail[i] = '\0';
+                if(strcmp(gmail, "@gmail.com") == 0)
+                {
+                    return 1;
+                }
+                else
+                {
+                    return 0;
+                }
+            }
+            x++;
+        }
+    }
+}
+
 //This function receives a string(password) and checks its format(returns 0: if the password has not at least one digit and one uppercase and one lowercase, returns 1: if password does not have at least 6 characters, return 2: if password is correct)
 int checkFormatPassword(char *x)
 {
@@ -263,13 +302,37 @@ int checkFormatPassword(char *x)
     }
 }
 
+//This function receives a string(amount) and checks its format(returns 0: if the amount has at least one non-numeric character, return 1: if amount is correct)
+int checkFormatAmount(char *x)
+{
+    int d;
+    if(*x == '\0')
+    {
+        return 0;
+    }
+    else
+    {
+        while(*x != '\0')
+        {
+            d = isdigit(*x);
+            if(d == 0)
+            {
+                return 0;
+                break;
+            }
+            x++;
+        }
+        return 1;
+    }
+}
+
 //This function receives user information and places it in file Profiles and goes to the next step based on the user's choice
 void signUp(void)
 {
     struct profile s;
     s.link = NULL;
     int i=0, j=1, res, lenPassword;
-    char name[30], last_name[40], national_code[11], mobile_number[12], password[30], password2[30], codedPassword[30], ch, choice;
+    char name[30], last_name[40], national_code[11], mobile_number[12], email[50], password[30], password2[30], codedPassword[30], ch, choice;
     system("cls");
     printf("--------------- Sign Up ---------------\n\n");
     printf("Enter your name: ");
@@ -371,7 +434,25 @@ void signUp(void)
         strcpy(s.mobile_number, mobile_number);
     }
     printf("Enter your email: ");
-    gets(s.email);
+    gets(email);
+    res = checkFormatEmail(email);
+    if(res == 1)
+    {
+        strcpy(s.email, email);
+    }
+    else
+    {
+        while(res == 0)
+        {
+            setTextColor(RED);
+            printf("\nERROR: The email entered must end at \"@gmail.com\"!\n\n");
+            setTextColor(WHITE);
+            printf("Enter your email: ");
+            gets(email);
+            res = checkFormatEmail(email);
+        }
+        strcpy(s.email, email);
+    }
     printf("Enter your password: ");
     while(1)
     {
@@ -618,7 +699,7 @@ void signUp(void)
 void login(void)
 {
     char choice;
-    int exist = 0, j=0, k=1, lenPassword;
+    int exist = 0, j=0, k=1, error=0, minutes, seconds, lenPassword;
     struct profile *start, *end, *temp;
     FILE *f;
     f = fopen("Profiles.txt", "r");
@@ -713,6 +794,28 @@ void login(void)
         {
             while(strcmp(temp->password, codedPassword) != 0)
             {
+                error++;
+                if(error == 5)
+                {
+                    system("cls");
+                    printf("--------------- Login ---------------\n\n");
+                    setTextColor(RED);
+                    printf(">> ERROR: Try again in 15 minutes! <<\n\n");
+                    setTextColor(WHITE);
+                    printf("Remaining time: ");
+                    for(minutes=14; minutes>=0; minutes--)
+                    {
+                        printf("%2d:", minutes);
+                        for(seconds=59; seconds>=0; seconds--)
+                        {
+                            printf("%-2d", seconds);
+                            Sleep(1000);
+                            printf("\b\b");
+                        }
+                        printf("\b\b\b");
+                    }
+                    login();
+                }
                 setTextColor(RED);
                 printf("\nERROR: The password is incorrect! Try again!\n\n");
                 setTextColor(WHITE);
@@ -851,7 +954,8 @@ void mainMenu(void)
 //This function receives income information and places it in file Incomes and goes to the next step based on the user's choice
 void income(void)
 {
-    char choice, fileName[80];
+    int res;
+    char choice, fileName[80], checkAmount[10];
     struct income i;
     i.link = NULL;
     system("cls");
@@ -895,7 +999,25 @@ void income(void)
                     mainMenu();
                 }
     printf("\nPlease specify the amount of Income(In term of Rials): ");
-    gets(i.amount);
+    gets(checkAmount);
+    res = checkFormatAmount(checkAmount);
+    if(res == 1)
+    {
+        strcpy(i.amount, checkAmount);
+    }
+    else
+    {
+        while(res == 0)
+        {
+            setTextColor(RED);
+            printf("\nERROR: The amount entered must contain only digits!\n\n");
+            setTextColor(WHITE);
+            printf("Please specify the amount of Income(In term of Rials): ");
+            gets(checkAmount);
+            res = checkFormatAmount(checkAmount);
+        }
+        strcpy(i.amount, checkAmount);
+    }
     printf("Please specify the date of Income(YYYY/MM/DD): ");
     scanf("%4s/%2s/%2s", i.date.year, i.date.month, i.date.day);
     fflush(stdin);
@@ -951,7 +1073,8 @@ void income(void)
 //This function receives expense information and places it in file Expenses and goes to the next step based on the user's choice
 void expense(void)
 {
-    char choice, fileName[80];
+    int res;
+    char choice, fileName[80], checkAmount[10];
     struct expense e;
     e.link = NULL;
     system("cls");
@@ -1007,7 +1130,25 @@ void expense(void)
                                 mainMenu();
                             }
     printf("\nPlease specify the amount of Expense(In term of Rials): ");
-    gets(e.amount);
+    gets(checkAmount);
+    res = checkFormatAmount(checkAmount);
+    if(res == 1)
+    {
+        strcpy(e.amount, checkAmount);
+    }
+    else
+    {
+        while(res == 0)
+        {
+            setTextColor(RED);
+            printf("\nERROR: The amount entered must contain only digits!\n\n");
+            setTextColor(WHITE);
+            printf("Please specify the amount of Expense(In term of Rials): ");
+            gets(checkAmount);
+            res = checkFormatAmount(checkAmount);
+        }
+        strcpy(e.amount, checkAmount);
+    }
     printf("Please specify the date of Expense(YYYY/MM/DD): ");
     scanf("%4s/%2s/%2s", e.date.year, e.date.month, e.date.day);
     fflush(stdin);
@@ -3068,6 +3209,7 @@ void wordSearchIncomesDescription(void)
     tempIncome = startIncome;
     while(tempIncome != NULL)
     {
+        memset(descriptionWords, 0, sizeof(descriptionWords));
         strcpy(description, tempIncome->description);
         ch = description[i];
         i++;
@@ -3116,6 +3258,7 @@ void wordSearchIncomesDescription(void)
         tempIncome = startIncome;
         while(tempIncome != NULL)
         {
+            memset(descriptionWords, 0, sizeof(descriptionWords));
             strcpy(description, tempIncome->description);
             ch = description[i];
             i++;
@@ -3143,7 +3286,7 @@ void wordSearchIncomesDescription(void)
                     i++;
                 }
             }
-            /*for(i=0; i<50; i++)
+            for(i=0; i<50; i++)
             {
                 if(strcmp(word, descriptionWords[i]) == 0)
                 {
@@ -3162,12 +3305,7 @@ void wordSearchIncomesDescription(void)
                     printf(" %s\n", tempIncome->description);
                     break;
                 }
-            }*/
-            for(i=0; i<10; i++)
-            {
-                printf("%s,", descriptionWords[i]);
             }
-            printf("\n");
             i=0;
             j=0;
             k=0;
@@ -3290,7 +3428,7 @@ void expensesStatisticsMenu(void)
                     }
                         else if(choice == '7')
                         {
-                            printf("Go to the search in the expenses description field");
+                            wordSearchExpensesDescription();
                         }
                             else
                             {
@@ -5091,11 +5229,226 @@ void mostExpenseInterval(void)
     }
 }
 
+//This function displays expenses that have the user desired word in their description field and goes to the next step based on the user's choice
+void wordSearchExpensesDescription(void)
+{
+    int exist=0, i=0, j=0, k=0, a=0, b=0, choice;
+    char description[100], descriptionWords[50][30], word[30], userWord[30], ch;
+    system("cls");
+    printf("--------------- Expenses Statistics ---------------\n\n");
+    printf("Please enter a search term: ");
+    scanf("%s", userWord);
+    fflush(stdin);
+    strcpy(word, userWord);
+    strlwr(word);
+    char expensesFileName[80] = "Expenses_";
+    strcat(expensesFileName, Name);
+    strcat(expensesFileName, LastName);
+    strcat(expensesFileName, ".txt");
+    struct expense *startExpense, *endExpense, *tempExpense;
+    FILE *f;
+    f = fopen(expensesFileName, "r");
+    if(f != NULL)
+    {
+        tempExpense = malloc(sizeof(struct expense));
+        tempExpense->link = NULL;
+        fread(tempExpense, sizeof(struct expense), 1, f);
+        startExpense = endExpense = tempExpense;
+        while(feof(f) == 0)
+        {
+            tempExpense = malloc(sizeof(struct expense));
+            tempExpense->link = NULL;
+            fread(tempExpense, sizeof(struct expense), 1, f);
+            endExpense->link = tempExpense;
+            endExpense = tempExpense;
+        }
+        fclose(f);
+    }
+    else
+    {
+        printf("File could not be opened!");
+        exit(0);
+    }
+    tempExpense = startExpense;
+    while(tempExpense != NULL)
+    {
+        memset(descriptionWords, 0, sizeof(descriptionWords));
+        strcpy(description, tempExpense->description);
+        ch = description[i];
+        i++;
+        while(ch != '\r')
+        {
+            ch = tolower(ch);
+            descriptionWords[j][k] = ch;
+            k++;
+            ch = description[i];
+            i++;
+            while(ch != ' ' && ch != '\r')
+            {
+                ch = tolower(ch);
+                descriptionWords[j][k] = ch;
+                k++;
+                ch = description[i];
+                i++;
+            }
+            descriptionWords[j][k] = '\0';
+            if(ch == ' ')
+            {
+                k=0;
+                j++;
+                ch = description[i];
+                i++;
+            }
+        }
+        for(i=0; i<50; i++)
+        {
+            if(strcmp(word, descriptionWords[i]) == 0)
+            {
+                exist = 1;
+                break;
+            }
+        }
+        i=0;
+        j=0;
+        k=0;
+        tempExpense = tempExpense->link;
+    }
+    if(exist == 1)
+    {
+        setTextColor(AQUA);
+        printf("\n Amount      | Item                     | Date       | Description\n");
+        setTextColor(WHITE);
+        tempExpense = startExpense;
+        while(tempExpense != NULL)
+        {
+            memset(descriptionWords, 0, sizeof(descriptionWords));
+            strcpy(description, tempExpense->description);
+            ch = description[i];
+            i++;
+            while(ch != '\r')
+            {
+                ch = tolower(ch);
+                descriptionWords[j][k] = ch;
+                k++;
+                ch = description[i];
+                i++;
+                while(ch != ' ' && ch != '\r')
+                {
+                    ch = tolower(ch);
+                    descriptionWords[j][k] = ch;
+                    k++;
+                    ch = description[i];
+                    i++;
+                }
+                descriptionWords[j][k] = '\0';
+                if(ch == ' ')
+                {
+                    k=0;
+                    j++;
+                    ch = description[i];
+                    i++;
+                }
+            }
+            for(i=0; i<50; i++)
+            {
+                if(strcmp(word, descriptionWords[i]) == 0)
+                {
+                    printf(" %-12s", tempExpense->amount);
+                    setTextColor(AQUA);
+                    printf("|");
+                    setTextColor(WHITE);
+                    printf(" %-25s", tempExpense->item);
+                    setTextColor(AQUA);
+                    printf("|");
+                    setTextColor(WHITE);
+                    printf(" %s/%s/%s ", tempExpense->date.year, tempExpense->date.month, tempExpense->date.day);
+                    setTextColor(AQUA);
+                    printf("|");
+                    setTextColor(WHITE);
+                    printf(" %s\n", tempExpense->description);
+                    break;
+                }
+            }
+            i=0;
+            j=0;
+            k=0;
+            tempExpense = tempExpense->link;
+        }
+        printf("\n--------------------------------------------------\n\n");
+        tempExpense = endExpense = startExpense;
+        while(tempExpense != NULL)
+        {
+            endExpense = tempExpense->link;
+            free(tempExpense);
+            tempExpense = endExpense;
+        }
+        printf("1. Expenses Statistics Menu\n2. EXIT\n\n");
+        printf(">>Please Enter Your Choice: ");
+        choice = getchar();
+        fflush(stdin);
+        while(choice != '1' && choice != '2')
+        {
+            setTextColor(RED);
+            printf("\nERROR: The number entered is invalid! Try again!\n\n");
+            setTextColor(WHITE);
+            printf(">>Please Enter Your Choice: ");
+            choice = getchar();
+            fflush(stdin);
+        }
+        if(choice == '1')
+        {
+            expensesStatisticsMenu();
+        }
+        else
+        {
+            exit(0);
+        }
+    }
+    else
+    {
+        tempExpense = endExpense = startExpense;
+        while(tempExpense != NULL)
+        {
+            endExpense = tempExpense->link;
+            free(tempExpense);
+            tempExpense = endExpense;
+        }
+        setTextColor(RED);
+        printf("\nERROR: The word \"%s\" was not found!\n\n", userWord);
+        setTextColor(WHITE);
+        printf("1. Try again!\n2. EXIT\n\n0. Expense Statistics Menu\n\n");
+        printf(">>Please Enter Your Choice: ");
+        choice = getchar();
+        fflush(stdin);
+        while(choice != '1' && choice != '2' && choice != '0')
+        {
+            setTextColor(RED);
+            printf("\nERROR: The number entered is invalid! Try again!\n\n");
+            setTextColor(WHITE);
+            printf(">>Please Enter Your Choice: ");
+            choice = getchar();
+            fflush(stdin);
+        }
+        if(choice == '1')
+        {
+            wordSearchExpensesDescription();
+        }
+        else if(choice == '0')
+        {
+            expensesStatisticsMenu();
+        }
+            else
+            {
+                exit(0);
+            }
+    }
+}
+
 //This function receives change in user information and places it in file Profiles and goes to the next step based on the user's choice
 void settings(void)
 {
     int i=0, j=1, res, lenPassword;
-    char password[30], password2[30], codedPassword[30], mobile_number[12], ch, choice;
+    char email[50], mobile_number[12], password[30], password2[30], codedPassword[30], ch, choice;
     struct profile *start, *end, *temp;
     FILE *f;
     f = fopen("Profiles.txt", "r");
@@ -5385,7 +5738,25 @@ void settings(void)
         else if(choice == '3')
         {
             printf("Enter your new email: ");
-            gets(temp->email);
+            gets(email);
+            res = checkFormatEmail(email);
+            if(res == 1)
+            {
+                strcpy(temp->email, email);
+            }
+            else
+            {
+                while(res == 0)
+                {
+                    setTextColor(RED);
+                    printf("\nERROR: The email entered must end at \"@gmail.com\"!\n\n");
+                    setTextColor(WHITE);
+                    printf("Enter your email: ");
+                    gets(email);
+                    res = checkFormatEmail(email);
+                }
+                strcpy(temp->email, email);
+            }
         }
             else
             {
